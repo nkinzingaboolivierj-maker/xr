@@ -1,0 +1,9 @@
+node_modules/
+.env
+data/
+backups/
+*.db
+*.db-wal
+*.db-shm
+*.pre-restore-*
+e2e/screenshots/FAILURE.png

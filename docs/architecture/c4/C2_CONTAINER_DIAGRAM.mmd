@@ -1,0 +1,31 @@
+C4Container
+  title C2 — XR Containers (current vs target)
+
+  Person(user, "Owner / Manager / Cashier / Inventory Staff", "Authenticated user, scoped to one business")
+
+  System_Boundary(xr, "XR Platform") {
+    Container(api, "XR API Application", "Node.js (built-in modules only)", "Auth, RBAC, Business isolation, Products/Pricing, Audit, Suppliers, Procurement, Inventory ledger, FIFO, Stock aging. IMPLEMENTED (Stage 1+2, 52/52 tests).")
+    ContainerDb(db, "SQLite Database", "SQLite (dev)", "Transactional store: FKs, unique constraints, rollback. IMPLEMENTED - dev only.")
+    Container(mobileclient, "Mobile API Client", "JS library", "Wraps existing endpoints (auth, products, suppliers, purchases, inventory, categories, users, audit). IMPLEMENTED - 11/11 tests.")
+    Container(webproto, "Desktop Web Prototype", "Static HTML/JS", "xr-pos-demo.html - UX reference only, in-memory state.")
+    Container(mobileproto, "Mobile Prototype", "Static HTML/JS", "xr-mobile-demo.html - UX reference only, in-memory state.")
+
+    Container(webapp, "Production Web Application", "TBD framework", "TARGET - not built")
+    Container(mobileapp, "Production Mobile Application", "Expo / React Native", "TARGET - not built")
+    ContainerDb(pg, "PostgreSQL Database", "PostgreSQL", "TARGET - not built")
+    Container(worker, "Background Worker", "TBD", "TARGET - WhatsApp/document delivery, retries")
+    ContainerQueue(queue, "Job Queue", "TBD", "TARGET - decouples API from async work")
+    ContainerDb(storage, "Object Storage", "TBD", "TARGET - receipts, exports, backups")
+  }
+
+  Rel(user, webproto, "Views UI only, no live data", "HTML/JS, in-memory")
+  Rel(user, mobileproto, "Views UI only, no live data", "HTML/JS, in-memory")
+  Rel(mobileclient, api, "Calls implemented endpoints", "HTTP, tested")
+  Rel(api, db, "Reads/writes", "SQL, transactional")
+
+  Rel(webapp, api, "Will call real endpoints", "HTTPS/JSON [TARGET]")
+  Rel(mobileapp, mobileclient, "Will use as its API layer", "[TARGET]")
+  Rel(api, pg, "Will migrate from SQLite", "[TARGET]")
+  Rel(api, queue, "Will enqueue async jobs", "[TARGET]")
+  Rel(worker, queue, "Will consume jobs", "[TARGET]")
+  Rel(worker, storage, "Will persist documents", "[TARGET]")

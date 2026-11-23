@@ -1,0 +1,36 @@
+# Render Blueprint for XR Business Management & POS.
+#
+# Usage: push this repository to GitHub, then in the Render dashboard choose
+# "New +" -> "Blueprint" and point it at the repo. Render reads this file and
+# pre-fills the service, environment variables and the persistent disk for
+# you -- review and click "Apply".
+#
+# If Render's "A Blueprint file was found, but there was an issue" message
+# appears again, open its details (usually a line/field it didn't recognize)
+# and treat the Render dashboard's own validator as correct over this file --
+# Render's Blueprint field names have changed over time and this project was
+# built without a way to test against Render's live schema. The fields below
+# are the long-standing, conservative set from Render's docs (kept minimal on
+# purpose: no optional/newer keys that are more likely to have changed).
+services:
+  - type: web
+    name: xr-pos
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: XR_DB_FILE
+        value: /data/xr.db
+      - key: XR_BACKUP_DIR
+        value: /data/backups
+      - key: TRUST_PROXY
+        value: "true"
+      - key: HSTS
+        value: "true"
+    disk:
+      name: xr-data
+      mountPath: /data
+      sizeGB: 1

@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>XR — Mobile (Demo)</title>
+<style>
+  :root{
+    --bg:#F6F5F1; --surface:#FFFFFF; --ink:#161F1A; --ink-muted:#6E7469; --ink-faint:#A7AA9F;
+    --border:#E4E1D8; --line:#EDEAE1; --accent:#1F6F55; --accent-soft:#E6F1EC;
+    --warn:#A9752B; --warn-soft:#FBF0DE; --danger:#AE4230; --danger-soft:#FBEAE5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#EDEBE4;color:var(--ink);display:flex;justify-content:center;align-items:flex-start;padding:24px 12px;min-height:100vh;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:ui-monospace,SFMono-Regular,"Roboto Mono",Menlo,monospace;font-variant-numeric:tabular-nums;}
+  .row{display:flex;align-items:center;} .between{justify-content:space-between;} .wrap{flex-wrap:wrap;}
+  .gap1{gap:4px;} .gap2{gap:8px;} .gap3{gap:12px;} .grow{flex:1;}
+  .xs{font-size:12px;} .sm{font-size:13px;} .base{font-size:14px;} .lg{font-size:19px;}
+  .muted{color:var(--ink-muted);} .faint{color:var(--ink-faint);} .accent{color:var(--accent);} .danger{color:var(--danger);}
+  .semibold{font-weight:600;} .bold{font-weight:700;} .medium{font-weight:500;}
+  .hero-label{font-size:12px;color:var(--ink-muted);margin-bottom:3px;}
+  .hero-value{font-size:34px;font-weight:700;letter-spacing:-0.02em;line-height:1.08;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:15px;}
+  .list{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;}
+  .list-item{display:flex;align-items:center;gap:11px;padding:13px 14px;border-bottom:1px solid var(--line);}
+  .list-item:last-child{border-bottom:none;}
+  .btn{border:none;cursor:pointer;border-radius:999px;font-size:13px;font-weight:600;padding:10px 16px;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--surface);color:var(--ink);border:1px solid var(--border);}
+  .btn:disabled{opacity:.5;} .btn-accent{background:var(--accent);color:#fff;border:none;} .btn-block{width:100%;padding:14px;font-size:14px;}
+  input,select{font:inherit;color:inherit;}
+  .input{border:1px solid transparent;border-radius:12px;padding:11px 13px;font-size:13px;outline:none;background:var(--bg);width:100%;transition:border-color .12s ease;}
+  .input:focus{border-color:var(--accent);background:#fff;}
+  .badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;}
+  .icon{vertical-align:middle;display:inline-block;flex-shrink:0;}
+  .dashed{border-top:1px dashed var(--border);}
+  .empty{text-align:center;color:var(--ink-faint);padding:30px 14px;font-size:12px;}
+  .monogram{width:38px;height:38px;border-radius:11px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+  .quick-icon{width:46px;height:46px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto;}
+  .bar-track{height:6px;border-radius:99px;background:var(--accent-soft);overflow:hidden;display:block;}
+  .bar-fill{height:100%;background:var(--accent);border-radius:99px;display:block;}
+  ::-webkit-scrollbar{width:0;}
+
+  /* Phone chrome ------------------------------------------------------ */
+  .phone{position:relative;width:390px;height:min(844px,94vh);background:var(--bg);border:10px solid #14161a;border-radius:46px;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.28);display:flex;flex-direction:column;}
+  .statusbar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:8px 22px 2px 22px;font-size:13px;font-weight:600;color:var(--ink);}
+  .statusbar .dot{width:4px;height:4px;border-radius:50%;background:var(--ink);display:inline-block;}
+  @media (max-width:460px){
+    body{padding:0;}
+    .phone{width:100vw;height:100dvh;border:none;border-radius:0;box-shadow:none;}
+  }
+
+  .appbar{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:6px 14px 12px 14px;}
+  .appbar-btn{border:none;background:var(--surface);border:1px solid var(--border);color:var(--ink);width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+  .appbar-title{font-size:16px;font-weight:700;}
+  .appbar-sub{font-size:11px;color:var(--ink-muted);font-weight:400;}
+
+  .screen{flex:1;min-height:0;overflow-y:auto;padding:0 14px 90px 14px;}
+  .full-screen{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;padding:24px 22px;}
+
+  .tabbar{flex-shrink:0;position:relative;display:flex;background:var(--surface);border-top:1px solid var(--border);padding:8px 4px calc(6px + env(safe-area-inset-bottom,0px)) 4px;}
+  .tabbar button{flex:1;border:none;background:transparent;color:var(--ink-faint);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:4px 0;cursor:pointer;position:relative;}
+  .tabbar button.active{color:var(--accent);}
+
+  .fab-cart{position:absolute;right:16px;bottom:78px;background:var(--ink);color:#fff;border:none;border-radius:999px;padding:12px 16px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.25);z-index:45;}
+  .fab-cart .count{background:var(--accent);border-radius:999px;padding:1px 7px;font-size:11px;}
+
+  .qtybox{display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;background:#fff;}
+  .qtybox button{border:none;background:transparent;padding:6px 9px;cursor:pointer;color:var(--ink);}
+  .chip{border:1px solid var(--border);background:#fff;color:var(--ink-muted);border-radius:8px;padding:8px 4px;font-size:11px;cursor:pointer;text-align:center;}
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .sheet-overlay{position:absolute;inset:0;background:rgba(27,30,26,.42);z-index:60;display:flex;align-items:flex-end;}
+  .sheet{background:var(--surface);width:100%;border-radius:18px 18px 0 0;padding:8px 14px calc(18px + env(safe-area-inset-bottom,0px)) 14px;max-height:78%;overflow-y:auto;}
+  .sheet-handle{width:36px;height:4px;border-radius:99px;background:var(--border);margin:6px auto 12px auto;}
+  .sheet-group-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);padding:12px 6px 4px 6px;}
+  .sheet-group-label:first-child{padding-top:0;}
+  .sheet-item{border:none;background:transparent;width:100%;text-align:left;display:flex;align-items:center;gap:12px;padding:11px 6px;border-radius:10px;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;}
+  .sheet-item:active{background:var(--bg);}
+
+  .toast{position:absolute;left:14px;right:14px;bottom:82px;color:#fff;padding:10px 14px;border-radius:12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(0,0,0,.2);z-index:70;}
+
+  .scanner-view{background:#14161a;border-radius:16px;height:220px;position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:14px;overflow:hidden;}
+  .scanner-frame{width:150px;height:150px;border:3px solid rgba(255,255,255,.7);border-radius:16px;position:relative;}
+  .scanner-frame::before,.scanner-frame::after{content:'';position:absolute;width:26px;height:26px;border-color:var(--accent);}
+  .scanner-hint{position:absolute;bottom:12px;left:0;right:0;text-align:center;color:rgba(255,255,255,.75);font-size:11px;}
+
+  .receipt-paper{background:#fff;}
+  .scallop-top{height:12px;background-color:#fff;background-image:radial-gradient(circle at 10px 10px, var(--bg) 9px, transparent 9.5px);background-size:20px 20px;}
+  .scallop-bottom{height:12px;background-color:#fff;background-image:radial-gradient(circle at 10px 0px, var(--bg) 9px, transparent 9.5px);background-size:20px 20px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+
+const COLOR = { ink:'#1B1E1A', accent:'#1F6F55', accentSoft:'#E6F1EC', warn:'#A9752B', danger:'#AE4230' };
+// A small, cohesive set of chart colors (not one-per-product) — kept
+// entirely within the accent family so nothing here is ever mistaken
+// for the semantic warn/danger colors used elsewhere in the UI.
+const CHART_COLORS = ['#1F6F55', '#4F9C82', '#7FB8A3', '#2E5E73', '#8B9A94'];
+const PRODUCT_COLOR = {
+  p1:CHART_COLORS[0], p2:CHART_COLORS[1], p3:CHART_COLORS[2], p4:CHART_COLORS[3], p5:CHART_COLORS[4],
+  p6:CHART_COLORS[0], p7:CHART_COLORS[1], p8:CHART_COLORS[2], p9:CHART_COLORS[3], p10:CHART_COLORS[4],
+};
+
+const ICON_PATHS = {
+  search:'<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  minus:'<line x1="5" y1="12" x2="19" y2="12"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+  cart:'<circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M2 3h2l2.4 12.4a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.6L20 7H6"/>',
+  box:'<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
+  layers:'<rect x="3" y="7" width="7" height="7" rx="1"/><rect x="14" y="7" width="7" height="7" rx="1"/><rect x="8.5" y="14" width="7" height="7" rx="1"/>',
+  receipt:'<path d="M6 2h12v19l-2-1-2 1-2-1-2 1-2-1-2 1V2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/>',
+  alert:'<path d="M12 2 1 21h22L12 2z"/><line x1="12" y1="9" x2="12" y2="13.5"/><circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
+  check:'<circle cx="12" cy="12" r="9"/><polyline points="8.5 12.5 11 15 16 9"/>',
+  x:'<line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>',
+  printer:'<polyline points="6 9 6 3 18 3 18 9"/><rect x="4" y="9" width="16" height="8" rx="1"/><rect x="6" y="15" width="12" height="6"/>',
+  message:'<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-4-1L3 20l1.2-4A8.4 8.4 0 0 1 3 12 8.5 8.5 0 1 1 21 11.5z"/>',
+  rotate:'<polyline points="1 4 1 10 7 10"/><path d="M3.5 15a9 9 0 1 0 2-9.5L1 10"/>',
+  chevron:'<polyline points="9 18 15 12 9 6"/>',
+  arrowleft:'<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  info:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11.5"/><circle cx="12" cy="8" r="0.9" fill="currentColor" stroke="none"/>',
+  bag:'<path d="M6 8h12l1 12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L6 8z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+  users:'<circle cx="8.5" cy="8" r="3"/><path d="M2.5 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="8.5" r="2.4"/><path d="M15 14.3c2.6.5 4.5 2.7 5 5.7"/>',
+  wallet:'<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.2" fill="currentColor" stroke="none"/>',
+  trending:'<polyline points="3 17 9 11 13 15 21 6"/><polyline points="15 6 21 6 21 12"/>',
+  file:'<path d="M7 2h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><polyline points="14 2 14 7 19 7"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>',
+  settings:'<circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.4M12 18.6V21M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M3 12h2.4M18.6 12H21M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/>',
+  bell:'<path d="M6 8a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 12 6 8z"/><path d="M9.5 17a2.5 2.5 0 0 0 5 0"/>',
+  scan:'<path d="M3 7V4a1 1 0 0 1 1-1h3"/><path d="M17 3h3a1 1 0 0 1 1 1v3"/><path d="M21 17v3a1 1 0 0 1-1 1h-3"/><path d="M7 21H4a1 1 0 0 1-1-1v-3"/><line x1="4" y1="12" x2="20" y2="12"/>',
+  usercircle:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.3 19a6 6 0 0 1 11.4 0"/>',
+  morehoriz:'<circle cx="5" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.3" fill="currentColor" stroke="none"/>',
+  home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  device:'<rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/>',
+};
+function icon(name, size){
+  size = size || 14;
+  return '<svg class="icon" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ICON_PATHS[name]+'</svg>';
+}
+
+// ---------------------------------------------------------------------
+// Seed data — same catalog/business as the desktop demo, so the two
+// prototypes read as one consistent business, not two different demos.
+// ---------------------------------------------------------------------
+function daysAgo(n){ return Date.now() - n*24*60*60*1000; }
+
+const PRODUCTS = [
+  { id:'p1',  name:'Wireless Mouse',              sku:'PRD-000001', qr:'QR-M2X91P', unit:'Piece', department:'Electronics', category:'Computer Accessories', min:4500,   rec:5200,   max:6500   },
+  { id:'p2',  name:'USB-C Hub',                   sku:'PRD-000002', qr:'QR-K7L305', unit:'Piece', department:'Electronics', category:'Computer Accessories', min:10500,  rec:12500,  max:16000  },
+  { id:'p3',  name:'Tempered Glass Screen Protector', sku:'PRD-000003', qr:'QR-D8Q114', unit:'Piece', department:'Electronics', category:'Phone Accessories', min:1800,   rec:2200,   max:3000   },
+  { id:'p4',  name:'iPhone 14',                   sku:'PRD-000004', qr:'QR-H4T823', unit:'Piece', department:'Electronics', category:'Mobile Phones',        min:850000, rec:890000, max:950000 },
+  { id:'p5',  name:'Samsung Galaxy A25',           sku:'PRD-000005', qr:'QR-B2N556', unit:'Piece', department:'Electronics', category:'Mobile Phones',        min:265000, rec:285000, max:310000 },
+  { id:'p6',  name:'Power Bank 20,000mAh',         sku:'PRD-000006', qr:'QR-W9V271', unit:'Piece', department:'Electronics', category:'Power & Charging',     min:16500,  rec:19000,  max:24000  },
+  { id:'p7',  name:'USB-C Charging Cable',         sku:'PRD-000007', qr:'QR-C6R448', unit:'Piece', department:'Electronics', category:'Power & Charging',     min:3200,   rec:3800,   max:5000   },
+  { id:'p8',  name:'Bluetooth Earbuds',            sku:'PRD-000008', qr:'QR-E1Y739', unit:'Piece', department:'Electronics', category:'Audio',                min:19500,  rec:23000,  max:28000  },
+  { id:'p9',  name:'USB-C Laptop Charger (65W)',   sku:'PRD-000009', qr:'QR-F5U862', unit:'Piece', department:'Electronics', category:'Laptop Accessories',   min:21000,  rec:25000,  max:30000  },
+  { id:'p10', name:'Aluminum Laptop Stand',        sku:'PRD-000010', qr:'QR-J3Z190', unit:'Piece', department:'Electronics', category:'Laptop Accessories',   min:13500,  rec:16000,  max:19500  },
+];
+
+function seedBatches(){
+  return [
+    { id:'b1',  productId:'p1',  batchNumber:'BATCH-000001', supplier:'Kigali Tech Distributors Ltd', qtyReceived:12, qtyRemaining:12, unitCost:4200,  receivedAt:daysAgo(11) },
+    { id:'b2',  productId:'p1',  batchNumber:'BATCH-000002', supplier:'Kigali Tech Distributors Ltd', qtyReceived:30, qtyRemaining:30, unitCost:4500,  receivedAt:daysAgo(3)  },
+    { id:'b3',  productId:'p2',  batchNumber:'BATCH-000003', supplier:'Kigali Tech Distributors Ltd', qtyReceived:18, qtyRemaining:18, unitCost:9500,  receivedAt:daysAgo(6)  },
+    { id:'b4',  productId:'p3',  batchNumber:'BATCH-000004', supplier:'Mobile World Imports',         qtyReceived:26, qtyRemaining:26, unitCost:1200,  receivedAt:daysAgo(15) },
+    { id:'b5',  productId:'p3',  batchNumber:'BATCH-000005', supplier:'Mobile World Imports',         qtyReceived:50, qtyRemaining:50, unitCost:1400,  receivedAt:daysAgo(4)  },
+    { id:'b6',  productId:'p4',  batchNumber:'BATCH-000006', supplier:'Mobile World Imports',         qtyReceived:7,  qtyRemaining:7,  unitCost:780000, receivedAt:daysAgo(5)  },
+    { id:'b7',  productId:'p5',  batchNumber:'BATCH-000007', supplier:'Mobile World Imports',         qtyReceived:12, qtyRemaining:12, unitCost:240000, receivedAt:daysAgo(8)  },
+    { id:'b8',  productId:'p6',  batchNumber:'BATCH-000008', supplier:'Mobile World Imports',         qtyReceived:31, qtyRemaining:31, unitCost:14000, receivedAt:daysAgo(10) },
+    { id:'b9',  productId:'p7',  batchNumber:'BATCH-000009', supplier:'Mobile World Imports',         qtyReceived:24, qtyRemaining:24, unitCost:2600,  receivedAt:daysAgo(18) },
+    { id:'b10', productId:'p7',  batchNumber:'BATCH-000010', supplier:'Mobile World Imports',         qtyReceived:40, qtyRemaining:40, unitCost:2800,  receivedAt:daysAgo(6)  },
+    { id:'b11', productId:'p8',  batchNumber:'BATCH-000011', supplier:'Kigali Tech Distributors Ltd', qtyReceived:9,  qtyRemaining:9,  unitCost:16000, receivedAt:daysAgo(7)  },
+    { id:'b12', productId:'p9',  batchNumber:'BATCH-000012', supplier:'Kigali Tech Distributors Ltd', qtyReceived:14, qtyRemaining:14, unitCost:18000, receivedAt:daysAgo(20) },
+    { id:'b13', productId:'p10', batchNumber:'BATCH-000013', supplier:'Kigali Tech Distributors Ltd', qtyReceived:22, qtyRemaining:22, unitCost:11000, receivedAt:daysAgo(2)  },
+  ];
+}
+function seedPurchases(batches){
+  return batches.map((b,i)=>({ id:'pu'+(i+1), purchaseNumber:'PUR-'+String(i+1).padStart(6,'0'), supplierName:b.supplier,
+    productId:b.productId, quantity:b.qtyReceived, unitCost:b.unitCost, purchaseDate:b.receivedAt, status:'RECEIVED', receivedAt:b.receivedAt, batchId:b.id }));
+}
+function seedCustomers(){
+  return [
+    { id:'c1', name:'Jean Claude Habimana', phone:'+250 788 123 456', createdAt:daysAgo(40) },
+    { id:'c2', name:'Aline Uwase',          phone:'+250 788 234 567', createdAt:daysAgo(25) },
+    { id:'c3', name:'Eric Niyonzima',       phone:'+250 788 345 678', createdAt:daysAgo(15) },
+    { id:'c4', name:'Grace Mukamana',       phone:'+250 788 456 789', createdAt:daysAgo(8)  },
+    { id:'c5', name:'Patrick Bizimana',     phone:'+250 788 567 890', createdAt:daysAgo(3)  },
+  ];
+}
+function seedExpenses(){
+  return [
+    { id:'e1', category:'Rent',      description:'Shop rent — August',         amount:180000, date:daysAgo(20), paymentMethod:'Bank' },
+    { id:'e2', category:'Packaging', description:'Branded bags & boxes',       amount:15000,  date:daysAgo(12), paymentMethod:'Mobile Money' },
+    { id:'e3', category:'Transport', description:'Delivery — Kimironko order', amount:8000,   date:daysAgo(6),  paymentMethod:'Cash' },
+    { id:'e4', category:'Utilities', description:'Electricity (REG)',          amount:22000,  date:daysAgo(4),  paymentMethod:'Bank' },
+    { id:'e5', category:'Marketing', description:'Instagram promoted post',    amount:10000,  date:daysAgo(2),  paymentMethod:'Mobile Money' },
+  ];
+}
+const EXPENSE_CATEGORIES = ['Rent','Transport','Packaging','Utilities','Salaries','Marketing','Other'];
+const STANDARD_CATEGORIES = ['Mobile Phones','Phone Accessories','Computer Accessories','Laptop Accessories','Power & Charging','Audio'];
+const DEFAULT_LOW_STOCK_THRESHOLD = 15;
+const HISTORY = {
+  days: [ {n:7,revenue:620000,cogs:395000},{n:6,revenue:745000,cogs:470000},{n:5,revenue:512000,cogs:328000},
+    {n:4,revenue:890000,cogs:560000},{n:3,revenue:668000,cogs:425000},{n:2,revenue:934000,cogs:592000},{n:1,revenue:811500,cogs:514700} ],
+  lastWeekRevenue: 4575000,
+  productStats: { p1:{units:60,revenue:312000}, p2:{units:39,revenue:487500}, p3:{units:110,revenue:242000}, p4:{units:2,revenue:1780000},
+    p5:{units:4,revenue:1140000}, p6:{units:25,revenue:475000}, p7:{units:70,revenue:266000}, p8:{units:8,revenue:184000}, p9:{units:6,revenue:150000}, p10:{units:9,revenue:144000} },
+};
+
+const BUSINESSES = [
+  { id:'biz1', name:'XR Demo Business', role:'Owner' },
+  { id:'biz2', name:'Kigali Mobile Hub', role:'Manager' },
+];
+
+// ---------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------
+const _seedBatches = seedBatches();
+const state = {
+  loggedIn:false, businessSelected:false, activeBusinessId:null,
+  loginEmail:'', loginPassword:'',
+  screen:'home', screenHistory:[],
+  moreSheetOpen:false, pickerOpen:null,
+  products: PRODUCTS.slice(), batches:_seedBatches, purchases:seedPurchases(_seedBatches),
+  customers:seedCustomers(), expenses:seedExpenses(), sales:[], cart:[],
+  search:'', scanRotation:0, selectedProductId:null, stockFilter:'all',
+  toast:null,
+  customerName:'Walk-in Customer', paymentMethod:'Cash', cashReceived:'',
+  businessName:'XR', lowStockThreshold:DEFAULT_LOW_STOCK_THRESHOLD,
+  saleCounter:125, purchaseCounter:14, batchCounter:14, customerCounter:6, expenseCounter:6, productCounter:11,
+  npProductId:'', npSupplier:'', npQty:'', npCost:'',
+  ncName:'', ncPhone:'',
+  neCategory:'Transport', neDescription:'', neAmount:'',
+  showAddProduct:false, pfName:'', pfCategory:'Mobile Phones', pfUnit:'Piece', pfMin:'', pfRec:'', pfMax:'',
+};
+let toastTimer = null;
+
+// ---------------------------------------------------------------------
+// Helpers (same formulas as the desktop demo — kept identical on purpose)
+// ---------------------------------------------------------------------
+function fmt(n){ return Math.round(n||0).toLocaleString('en-US'); }
+function fmtDate(ts){ return new Date(ts).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }); }
+function fmtDateOnly(ts){ return new Date(ts).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function initials(name){ const p=(name||'').trim().split(/\s+/).filter(Boolean); return p.length?p.map(w=>w[0]).join('').slice(0,3).toUpperCase():'XR'; }
+function agingBucket(days){
+  if(days<=3) return { label:'Fresh', fg:'var(--accent)', bg:'var(--accent-soft)' };
+  if(days<=7) return { label:'Aging', fg:'var(--warn)', bg:'var(--warn-soft)' };
+  if(days<=14) return { label:'Old', fg:'var(--warn)', bg:'var(--warn-soft)' };
+  return { label:'Critical', fg:'var(--danger)', bg:'var(--danger-soft)' };
+}
+function stockFor(productId){ return state.batches.filter(b=>b.productId===productId).reduce((s,b)=>s+b.qtyRemaining,0); }
+function stockValue(){ return state.batches.reduce((s,b)=>s+b.qtyRemaining*b.unitCost,0); }
+function pctChange(curr,prev){ if(!prev) return 0; return (curr-prev)/prev*100; }
+function showToast(type,message){
+  state.toast = { type, message };
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ state.toast=null; render(); }, 2600);
+  render();
+}
+function computeFinanceSummary(){
+  const liveRevenue = state.sales.reduce((s,sa)=>s+sa.total,0);
+  const liveCOGS = state.sales.reduce((s,sa)=>s+sa.cogs,0);
+  const histRevenue = HISTORY.days.reduce((s,d)=>s+d.revenue,0);
+  const histCOGS = HISTORY.days.reduce((s,d)=>s+d.cogs,0);
+  const revenue = histRevenue+liveRevenue, cogs = histCOGS+liveCOGS;
+  const grossProfit = revenue-cogs;
+  const margin = revenue>0 ? (grossProfit/revenue*100) : 0;
+  const operatingExpenses = state.expenses.reduce((s,e)=>s+e.amount,0);
+  return { liveRevenue, revenue, cogs, grossProfit, margin, operatingExpenses, netProfit: grossProfit-operatingExpenses };
+}
+function computeProductStats(){
+  const live = {};
+  state.sales.forEach(sa=>sa.items.forEach(i=>{ if(!live[i.productId]) live[i.productId]={units:0,revenue:0}; live[i.productId].units+=i.qty; live[i.productId].revenue+=i.lineTotal; }));
+  return state.products.map(p=>{
+    const seed = HISTORY.productStats[p.id]||{units:0,revenue:0}; const l = live[p.id]||{units:0,revenue:0};
+    return { product:p, units:seed.units+l.units, revenue:seed.revenue+l.revenue, stock:stockFor(p.id) };
+  });
+}
+
+// ---------------------------------------------------------------------
+// Navigation
+// ---------------------------------------------------------------------
+function goTo(screen, opts){
+  state.screenHistory.push(state.screen);
+  if(opts && opts.productId) state.selectedProductId = opts.productId;
+  state.screen = screen; state.moreSheetOpen = false;
+  render();
+}
+function goBack(){
+  state.screen = state.screenHistory.pop() || 'home';
+  render();
+}
+function goToTab(screen){
+  state.screenHistory = []; state.screen = screen; state.moreSheetOpen = false;
+  render();
+}
+
+// ---------------------------------------------------------------------
+// Cart / sale logic (identical FIFO mechanics to the desktop demo)
+// ---------------------------------------------------------------------
+function addToCart(productId, qty){
+  qty = qty||1;
+  const product = state.products.find(p=>p.id===productId);
+  const available = stockFor(productId);
+  const item = state.cart.find(i=>i.productId===productId);
+  const current = item?item.qty:0;
+  if(current+qty>available){ showToast('error','Only '+available+' available.'); return; }
+  if(item) item.qty += qty; else state.cart.push({ productId, qty, unitPrice:product.rec });
+  render();
+}
+function adjustCartQty(productId, delta){
+  const item = state.cart.find(i=>i.productId===productId);
+  if(!item) return;
+  const available = stockFor(productId);
+  const next = item.qty+delta;
+  if(delta>0 && next>available){ showToast('error','Only '+available+' available.'); return; }
+  if(next<=0){ state.cart = state.cart.filter(i=>i.productId!==productId); }
+  else item.qty = next;
+  render();
+}
+function removeFromCart(productId){ state.cart = state.cart.filter(i=>i.productId!==productId); render(); }
+function computeCartLines(){
+  return state.cart.map(item=>{
+    const product = state.products.find(p=>p.id===item.productId);
+    const available = stockFor(item.productId);
+    const stockError = item.qty>available ? ('Only '+available+' available') : null;
+    return Object.assign({}, item, { product, available, stockError, lineTotal:item.qty*item.unitPrice });
+  });
+}
+function completeSale(){
+  const lines = computeCartLines();
+  if(lines.length===0){ showToast('error','Cart is empty.'); return; }
+  if(lines.some(l=>l.stockError)){ showToast('error','Fix stock issues before completing the sale.'); return; }
+  const total = lines.reduce((s,l)=>s+l.lineTotal,0);
+  const cashNum = parseFloat(state.cashReceived)||0;
+  if(state.paymentMethod==='Cash' && cashNum<total){ showToast('error','Cash received is less than the total due.'); return; }
+
+  const working = state.batches.map(b=>Object.assign({},b));
+  const saleItems = [];
+  for(const line of lines){
+    let remaining = line.qty; const allocations = [];
+    const avail = working.filter(b=>b.productId===line.productId && b.qtyRemaining>0).sort((a,b)=>a.receivedAt-b.receivedAt);
+    for(const b of avail){
+      if(remaining<=0) break;
+      const take = Math.min(b.qtyRemaining, remaining);
+      if(take>0){ allocations.push({batchId:b.id,qty:take,unitCost:b.unitCost}); b.qtyRemaining-=take; remaining-=take; }
+    }
+    if(remaining>0){ showToast('error','Insufficient stock for '+line.product.name+'.'); return; }
+    const cost = allocations.reduce((s,a)=>s+a.qty*a.unitCost,0);
+    saleItems.push(Object.assign({}, line, { allocations, cost, profit:line.lineTotal-cost }));
+  }
+  const cogs = saleItems.reduce((s,i)=>s+i.cost,0);
+  const saleNumber = 'SAL-'+String(state.saleCounter).padStart(6,'0');
+  state.saleCounter += 1;
+  const record = {
+    id:saleNumber, saleNumber, items:saleItems, subtotal:total, total, cogs, profit:total-cogs,
+    paymentMethod:state.paymentMethod, cashReceived: state.paymentMethod==='Cash'?cashNum:null,
+    change: state.paymentMethod==='Cash' ? (cashNum-total) : null,
+    customerName: state.customerName||'Walk-in Customer', timestamp:Date.now(), businessName:state.businessName,
+  };
+  state.batches = working;
+  state.sales.unshift(record);
+  state.cart = []; state.cashReceived = ''; state.customerName='Walk-in Customer'; state.paymentMethod='Cash';
+  state.selectedProductId = record.id; // reused as "current receipt id" for the receipt screen
+  state.screenHistory = [];
+  state.screen = 'receipt';
+  render();
+  showToast('success','Sale '+saleNumber+' completed.');
+}
+
+function createPurchase(){
+  const product = state.products.find(p=>p.id===state.npProductId);
+  const qty = parseInt(state.npQty,10); const cost = parseFloat(state.npCost);
+  if(!product){ showToast('error','Choose a product.'); return; }
+  if(!state.npSupplier.trim()){ showToast('error','Enter a supplier.'); return; }
+  if(!qty||qty<=0){ showToast('error','Enter a quantity.'); return; }
+  if(!cost||cost<=0){ showToast('error','Enter a unit cost.'); return; }
+  const purchaseNumber = 'PUR-'+String(state.purchaseCounter).padStart(6,'0');
+  state.purchaseCounter += 1;
+  state.purchases.unshift({ id:'pu_'+purchaseNumber, purchaseNumber, supplierName:state.npSupplier.trim(), productId:product.id,
+    quantity:qty, unitCost:cost, purchaseDate:Date.now(), status:'DRAFT', receivedAt:null, batchId:null });
+  state.npProductId=''; state.npSupplier=''; state.npQty=''; state.npCost='';
+  render();
+  showToast('success','Draft purchase '+purchaseNumber+' created.');
+}
+function receivePurchase(purchaseId){
+  const purchase = state.purchases.find(p=>p.id===purchaseId);
+  if(!purchase || purchase.status!=='DRAFT') return;
+  const batchNumber = 'BATCH-'+String(state.batchCounter).padStart(6,'0');
+  state.batchCounter += 1;
+  const batch = { id:'b_'+batchNumber, productId:purchase.productId, batchNumber, supplier:purchase.supplierName,
+    qtyReceived:purchase.quantity, qtyRemaining:purchase.quantity, unitCost:purchase.unitCost, receivedAt:Date.now() };
+  state.batches.push(batch);
+  purchase.status='RECEIVED'; purchase.receivedAt=batch.receivedAt; purchase.batchId=batch.id;
+  render();
+  showToast('success','Purchase received — stock updated.');
+}
+function addCustomer(){
+  if(!state.ncName.trim()){ showToast('error','Enter a name.'); return; }
+  const id = 'c'+state.customerCounter; state.customerCounter+=1;
+  state.customers.unshift({ id, name:state.ncName.trim(), phone:state.ncPhone.trim(), createdAt:Date.now() });
+  state.ncName=''; state.ncPhone='';
+  render();
+  showToast('success','Customer added.');
+}
+function addExpense(){
+  const amount = parseFloat(state.neAmount);
+  if(!state.neDescription.trim()){ showToast('error','Enter a description.'); return; }
+  if(!amount||amount<=0){ showToast('error','Enter an amount.'); return; }
+  const id = 'e'+state.expenseCounter; state.expenseCounter+=1;
+  state.expenses.unshift({ id, category:state.neCategory, description:state.neDescription.trim(), amount, date:Date.now(), paymentMethod:'Cash' });
+  state.neDescription=''; state.neAmount='';
+  render();
+  showToast('success','Expense recorded.');
+}
+function randomQr(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = 'QR-';
+  for(let i=0;i<6;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function createProduct(){
+  const name = state.pfName.trim();
+  const min = parseFloat(state.pfMin), rec = parseFloat(state.pfRec), max = parseFloat(state.pfMax);
+  if(!name){ showToast('error','Enter a product name.'); return; }
+  if(!min||!rec||!max){ showToast('error','Enter min, recommended and max price.'); return; }
+  if(!(min<=rec && rec<=max)){ showToast('error','Pricing must satisfy min ≤ recommended ≤ max.'); return; }
+  const id = 'p'+state.productCounter;
+  const sku = 'PRD-'+String(state.productCounter).padStart(6,'0');
+  state.products.push({ id, name, sku, qr:randomQr(), unit:state.pfUnit, department:'Electronics', category:state.pfCategory, min, rec, max });
+  PRODUCT_COLOR[id] = CHART_COLORS[(state.productCounter-1) % CHART_COLORS.length];
+  state.productCounter += 1;
+  state.pfName=''; state.pfMin=''; state.pfRec=''; state.pfMax='';
+  state.showAddProduct = false;
+  render();
+  showToast('success', name+' added — 0 stock until a purchase is received.');
+}
+function resetDemo(){
+  const fresh = seedBatches();
+  state.batches=fresh; state.purchases=seedPurchases(fresh); state.customers=seedCustomers(); state.expenses=seedExpenses();
+  state.sales=[]; state.cart=[]; state.cashReceived=''; state.customerName='Walk-in Customer';
+  state.saleCounter=125; state.purchaseCounter=14; state.batchCounter=14; state.customerCounter=6; state.expenseCounter=6;
+  state.businessName='XR'; state.lowStockThreshold=DEFAULT_LOW_STOCK_THRESHOLD;
+  state.npProductId=''; state.npSupplier=''; state.npQty=''; state.npCost=''; state.ncName=''; state.ncPhone='';
+  state.neCategory='Transport'; state.neDescription=''; state.neAmount='';
+  state.stockFilter='all'; state.search='';
+  state.products = PRODUCTS.slice(); state.productCounter = 11; state.showAddProduct = false;
+  state.pfName=''; state.pfCategory='Mobile Phones'; state.pfUnit='Piece'; state.pfMin=''; state.pfRec=''; state.pfMax='';
+  goToTab('home');
+  showToast('success','Demo data reset.');
+}
+function logout(){
+  state.loggedIn=false; state.businessSelected=false; state.loginEmail=''; state.loginPassword='';
+  state.screen='home'; state.screenHistory=[];
+  render();
+}
+
+// ---------------------------------------------------------------------
+// Screen renderers
+// ---------------------------------------------------------------------
+function appBar(title, opts){
+  opts = opts||{};
+  let html = '<div class="appbar">';
+  if(opts.back) html += '<button class="appbar-btn" data-action="back">'+icon('arrowleft',16)+'</button>';
+  html += '<div class="grow"><div class="appbar-title">'+esc(title)+'</div>'+(opts.sub?'<div class="appbar-sub">'+esc(opts.sub)+'</div>':'')+'</div>';
+  if(opts.right) html += opts.right;
+  html += '</div>';
+  return html;
+}
+function statCard(label, value, sub, tone){
+  return '<div class="card"><div class="xs muted">'+esc(label)+'</div>'+
+    '<div class="mono semibold lg" style="margin-top:4px;'+(tone?'color:'+tone+';':'')+'">'+value+'</div>'+
+    (sub?'<div class="xs faint" style="margin-top:3px;">'+sub+'</div>':'')+'</div>';
+}
+function productRow(p, opts){
+  opts = opts||{};
+  const stock = stockFor(p.id);
+  const low = stock<state.lowStockThreshold;
+  const out = stock<=0;
+  const dotColor = out?'var(--danger)':(low?'var(--warn)':'var(--accent)');
+  return '<div class="list-item" data-action="open-product" data-id="'+p.id+'" style="cursor:pointer;">'+
+      '<div style="position:relative;flex-shrink:0;"><div class="monogram">'+esc(p.name.charAt(0))+'</div>'+
+      '<span style="position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:'+dotColor+';border:2px solid var(--surface);"></span></div>'+
+      '<div class="grow"><div class="row between"><span class="semibold sm">'+esc(p.name)+'</span>'+
+        '<span class="badge" style="background:'+(low?'var(--danger-soft)':'var(--accent-soft)')+';color:'+(low?'var(--danger)':'var(--accent)')+';">'+stock+' left</span></div>'+
+        '<div class="xs muted" style="margin-top:2px;">'+esc(p.category)+' · RWF '+fmt(p.rec)+(opts.showSku?' · '+esc(p.sku):'')+'</div>'+
+      '</div>'+
+    '</div>';
+}
+
+function renderLogin(){
+  let html = '<div style="flex:1;display:flex;flex-direction:column;min-height:0;">';
+  html += '<div style="background:var(--ink);color:#fff;padding:38px 26px 54px 26px;border-radius:0 0 32px 32px;text-align:center;flex-shrink:0;">'+
+    '<div style="width:60px;height:60px;border-radius:16px;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;margin:0 auto 14px auto;">'+initials(state.businessName)+'</div>'+
+    '<div class="lg bold">'+esc(state.businessName)+'</div>'+
+    '<div class="xs" style="margin-top:4px;color:rgba(255,255,255,.6);">Business Management &amp; POS</div>'+
+  '</div>';
+  html += '<div style="flex:1;background:var(--surface);margin-top:-22px;border-radius:22px 22px 0 0;padding:30px 24px;position:relative;z-index:2;overflow-y:auto;">';
+  html += '<div class="xs faint" style="margin-bottom:4px;">Email</div><input class="input" data-bind="loginEmail" placeholder="you@business.rw" value="'+esc(state.loginEmail)+'" style="margin-bottom:12px;"/>';
+  html += '<div class="xs faint" style="margin-bottom:4px;">Password</div><input class="input" type="password" data-bind="loginPassword" placeholder="••••••••" value="'+esc(state.loginPassword)+'" style="margin-bottom:20px;"/>';
+  html += '<button class="btn btn-accent btn-block" data-action="login">Sign in</button>';
+  html += '<div class="xs faint" style="margin-top:18px;text-align:center;">Demo sign-in — any email &amp; password continues. Not connected to a real authentication backend.</div>';
+  html += '</div></div>';
+  return html;
+}
+
+function renderBusinessSelect(){
+  let html = '<div class="full-screen">';
+  html += '<div class="lg bold" style="margin-top:10px;">Select a business</div>';
+  html += '<div class="xs muted" style="margin-top:4px;margin-bottom:18px;">You have access to '+BUSINESSES.length+' businesses.</div>';
+  BUSINESSES.forEach(b=>{
+    html += '<div class="card" data-action="select-business" data-id="'+b.id+'" style="margin-bottom:10px;cursor:pointer;">'+
+      '<div class="row gap2"><div class="monogram">'+initials(b.name)+'</div>'+
+      '<div class="grow"><div class="semibold sm">'+esc(b.name)+'</div><div class="xs muted">'+esc(b.role)+'</div></div>'+
+      icon('chevron',16)+'</div></div>';
+  });
+  html += '<div class="xs faint" style="margin-top:12px;">Both memberships use the same sample data in this prototype.</div>';
+  html += '</div>';
+  return html;
+}
+
+function renderHome(){
+  const fin = computeFinanceSummary();
+  const lowStock = state.products.filter(p=>stockFor(p.id)<state.lowStockThreshold);
+  let html = appBar(state.businessName, { sub:'Home', right:
+    '<button class="appbar-btn" data-action="open-notifications" style="position:relative;">'+icon('bell',16)+
+    (lowStock.length?'<span style="position:absolute;top:-3px;right:-3px;background:var(--danger);color:#fff;border-radius:99px;font-size:9px;font-weight:700;padding:1px 4px;">'+lowStock.length+'</span>':'')+
+    '</button>' });
+  html += '<div class="screen">';
+
+  html += '<div style="padding:6px 2px 18px 2px;">'+
+    '<div class="hero-label">Revenue this session</div>'+
+    '<div class="hero-value">RWF '+fmt(fin.liveRevenue)+'</div>'+
+    '<div class="xs muted" style="margin-top:4px;">'+state.sales.length+' sale'+(state.sales.length===1?'':'s')+' · '+fin.margin.toFixed(0)+'% margin overall</div>'+
+  '</div>';
+
+  if(lowStock.length>0){
+    html += '<div class="card" style="background:var(--danger-soft);border-color:var(--danger-soft);margin-bottom:16px;cursor:pointer;" data-action="open-notifications">'+
+      '<div class="row gap2 xs medium danger">'+icon('alert',14)+' '+lowStock.length+' product'+(lowStock.length===1?'':'s')+' low on stock — tap to view</div></div>';
+  }
+
+  html += '<div class="row" style="margin-bottom:20px;">';
+  const quick = [
+    { icon:'scan', label:'Scan', action:'goto-scan' },
+    { icon:'cart', label:'New sale', action:'goto-scan' },
+    { icon:'bag', label:'Receive', action:'goto-purchases' },
+  ];
+  quick.forEach(q=>{
+    html += '<div class="grow" data-action="'+q.action+'" style="text-align:center;cursor:pointer;">'+
+      '<div class="quick-icon">'+icon(q.icon,19)+'</div><div class="xs medium" style="margin-top:7px;">'+q.label+'</div></div>';
+  });
+  html += '</div>';
+
+  html += '<div class="row between xs semibold" style="margin-bottom:9px;">Recent sales<span class="faint medium" data-action="goto-tab-sales" style="cursor:pointer;">See all</span></div>';
+  if(state.sales.length===0){
+    html += '<div class="empty">No sales yet this session.</div>';
+  } else {
+    html += '<div class="list">';
+    state.sales.slice(0,4).forEach(s=>{
+      html += '<div class="list-item" data-action="open-receipt" data-id="'+s.id+'" style="cursor:pointer;">'+
+        '<div class="grow"><div class="row between xs medium"><span>'+s.saleNumber+'</span><span class="mono">RWF '+fmt(s.total)+'</span></div>'+
+        '<div class="row between xs faint" style="margin-top:3px;"><span>'+esc(s.customerName)+'</span><span>'+fmtDate(s.timestamp)+'</span></div></div>'+
+      '</div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderScan(){
+  const q = state.search.toLowerCase();
+  const results = q ? state.products.filter(p=>p.name.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q)) : [];
+  let html = appBar('Scan', { sub:'Find a product' });
+  html += '<div class="screen">';
+  html += '<div class="scanner-view"><div class="scanner-frame"></div><div class="scanner-hint">Camera preview isn\u2019t available in this browser prototype</div></div>';
+  html += '<button class="btn btn-accent btn-block" data-action="simulate-scan" style="margin-bottom:14px;">'+icon('scan',14)+' Simulate scan</button>';
+  html += '<div class="row gap2 card" style="padding:9px 12px;margin-bottom:10px;">'+icon('search',14)+
+    '<input class="grow" data-bind="search" placeholder="Or search a product…" value="'+esc(state.search)+'" style="border:none;outline:none;font-size:13px;background:transparent;"/></div>';
+  if(q){
+    if(results.length===0) html += '<div class="empty">No products match "'+esc(state.search)+'".</div>';
+    else { html += '<div class="list">'; results.forEach(p=>{ html += productRow(p); }); html += '</div>'; }
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderProductDetail(){
+  const p = state.products.find(x=>x.id===state.selectedProductId);
+  if(!p) return appBar('Product', {back:true})+'<div class="screen"><div class="empty">Product not found.</div></div>';
+  const stock = stockFor(p.id);
+  const batches = state.batches.filter(b=>b.productId===p.id).sort((a,b)=>a.receivedAt-b.receivedAt);
+  const suppliers = Array.from(new Set(batches.map(b=>b.supplier)));
+  const cartQty = (state.cart.find(i=>i.productId===p.id)||{}).qty || 0;
+  const clr = PRODUCT_COLOR[p.id];
+
+  let html = '<div style="position:relative;height:158px;flex-shrink:0;background:'+clr+'20;display:flex;align-items:center;justify-content:center;">'+
+    '<button class="appbar-btn" data-action="back" style="position:absolute;top:14px;left:14px;background:rgba(255,255,255,.9);">'+icon('arrowleft',16)+'</button>'+
+    '<div style="width:82px;height:82px;border-radius:50%;background:'+clr+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;">'+esc(p.name.charAt(0))+'</div>'+
+  '</div>';
+  html += '<div class="screen" style="padding-top:14px;">';
+  html += '<div class="row between" style="margin-bottom:2px;"><span class="semibold base" style="max-width:70%;">'+esc(p.name)+'</span>'+
+    '<span class="badge" style="background:'+(stock<state.lowStockThreshold?'var(--danger-soft)':'var(--accent-soft)')+';color:'+(stock<state.lowStockThreshold?'var(--danger)':'var(--accent)')+';">'+stock+' in stock</span></div>'+
+  '<div class="xs muted" style="margin-bottom:10px;">'+esc(p.category)+'</div>';
+
+  html += '<div class="card" style="margin-bottom:12px;"><div class="mono semibold lg accent">RWF '+fmt(p.rec)+'</div>'+
+    '<div class="mono xs muted row gap3" style="margin-top:6px;"><span>'+esc(p.sku)+'</span><span>'+esc(p.qr)+'</span></div>'+
+    '<div class="dashed" style="margin-top:10px;padding-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;">'+
+      '<div><div class="xs faint">Min</div><div class="mono sm medium">'+fmt(p.min)+'</div></div>'+
+      '<div style="background:var(--accent-soft);border-radius:6px;padding:2px 0;"><div class="xs accent">Rec.</div><div class="mono sm semibold accent">'+fmt(p.rec)+'</div></div>'+
+      '<div><div class="xs faint">Max</div><div class="mono sm medium">'+fmt(p.max)+'</div></div>'+
+    '</div></div>';
+
+  html += '<div class="xs semibold" style="margin-bottom:8px;">Supplier'+(suppliers.length===1?'':'s')+'</div>';
+  html += '<div class="card" style="margin-bottom:12px;">'+suppliers.map(s=>'<div class="xs">'+esc(s)+'</div>').join('<div class="dashed" style="margin:6px 0;"></div>')+'</div>';
+
+  html += '<div class="xs semibold" style="margin-bottom:8px;">Batches</div><div class="list">';
+  batches.forEach(b=>{
+    const days = Math.floor((Date.now()-b.receivedAt)/86400000);
+    const bucket = agingBucket(days);
+    html += '<div class="list-item"><div class="grow"><div class="row between xs"><span class="mono medium">'+b.batchNumber+'</span>'+
+      '<span class="badge" style="background:'+bucket.bg+';color:'+bucket.fg+';">'+bucket.label+'</span></div>'+
+      '<div class="row between xs muted" style="margin-top:4px;"><span>'+b.qtyRemaining+'/'+b.qtyReceived+' left</span><span>@'+fmt(b.unitCost)+' · '+days+'d ago</span></div></div></div>';
+  });
+  html += '</div>';
+
+  html += '<div style="position:absolute;left:14px;right:14px;bottom:calc(66px + env(safe-area-inset-bottom,0px));">'+
+    '<button class="btn btn-accent btn-block" data-action="add-to-cart" data-id="'+p.id+'" '+(stock<=0?'disabled':'')+'>'+
+      icon('cart',14)+' '+(cartQty>0?'Add another (already '+cartQty+' in cart)':'Add to cart')+
+    '</button></div>';
+  return html;
+}
+
+function renderCart(){
+  const lines = computeCartLines();
+  const total = lines.reduce((s,l)=>s+l.lineTotal,0);
+  const cashNum = parseFloat(state.cashReceived)||0;
+  const change = state.paymentMethod==='Cash' ? cashNum-total : 0;
+  const hasErrors = lines.some(l=>l.stockError);
+
+  let html = appBar('Checkout', { back:true, sub: lines.length+' item'+(lines.length===1?'':'s') });
+  html += '<div class="screen">';
+  if(lines.length===0){
+    html += '<div class="empty">Cart is empty. Scan or search a product to add it.</div>';
+    html += '</div>';
+    return html;
+  }
+  lines.forEach(l=>{
+    html += '<div class="card" style="margin-bottom:8px;">'+
+      '<div class="row between xs medium">'+esc(l.product.name)+'<button data-action="remove-cart" data-id="'+l.productId+'" style="border:none;background:none;color:var(--ink-faint);">'+icon('trash',14)+'</button></div>'+
+      '<div class="row between" style="margin-top:8px;">'+
+        '<div class="qtybox"><button data-action="cart-adjust" data-id="'+l.productId+'" data-delta="-1">'+icon('minus',12)+'</button>'+
+        '<span class="mono xs" style="width:22px;text-align:center;">'+l.qty+'</span>'+
+        '<button data-action="cart-adjust" data-id="'+l.productId+'" data-delta="1">'+icon('plus',12)+'</button></div>'+
+        '<span class="mono semibold sm">RWF '+fmt(l.lineTotal)+'</span>'+
+      '</div>'+
+      (l.stockError?'<div class="xs danger" style="margin-top:6px;">'+l.stockError+'</div>':'')+
+    '</div>';
+  });
+
+  html += '<div class="card" style="margin-bottom:10px;">'+
+    '<div class="row between xs semibold"><span>Total</span><span class="mono">RWF '+fmt(total)+'</span></div></div>';
+
+  html += '<div class="card" style="margin-bottom:10px;cursor:pointer;" data-action="open-customer-picker">'+
+    '<div class="xs faint">Customer</div><div class="row between sm medium" style="margin-top:2px;">'+esc(state.customerName)+icon('chevron',14)+'</div></div>';
+
+  html += '<div class="xs faint" style="margin-bottom:6px;">Payment method</div>';
+  html += '<div class="row gap2" style="margin-bottom:12px;">';
+  ['Cash','Mobile Money','Bank','Card'].forEach(m=>{
+    html += '<div class="grow chip '+(state.paymentMethod===m?'active':'')+'" data-action="set-payment" data-method="'+m+'">'+m+'</div>';
+  });
+  html += '</div>';
+
+  if(state.paymentMethod==='Cash'){
+    html += '<div class="xs faint" style="margin-bottom:4px;">Cash received</div>';
+    html += '<input class="input mono" data-bind="cashReceived" inputmode="decimal" placeholder="0" value="'+esc(state.cashReceived)+'" style="margin-bottom:6px;"/>';
+    if(state.cashReceived!==''){
+      html += '<div class="xs medium" style="color:'+(change<0?'var(--danger)':'var(--accent)')+';margin-bottom:10px;">'+(change<0?('Short by RWF '+fmt(-change)):('Change: RWF '+fmt(change)))+'</div>';
+    }
+  } else {
+    html += '<div class="xs faint" style="margin-bottom:10px;">Simulated in this demo — connects to a real payment provider in production.</div>';
+  }
+  html += '<div style="height:70px;"></div>';
+  html += '</div>';
+
+  html += '<div style="position:absolute;left:14px;right:14px;bottom:calc(66px + env(safe-area-inset-bottom,0px));">'+
+    '<button class="btn btn-block" data-action="complete-sale" style="'+(hasErrors?'background:var(--danger-soft);color:var(--danger);':'background:var(--accent);color:#fff;')+'">'+
+    (hasErrors?'Fix errors to continue':'Complete sale — RWF '+fmt(total))+'</button></div>';
+  return html;
+}
+
+function renderReceipt(){
+  const r = state.sales.find(s=>s.id===state.selectedProductId);
+  if(!r) return appBar('Receipt', {back:true})+'<div class="screen"><div class="empty">Receipt not found.</div></div>';
+  const fresh = state.screenHistory.length===0; // true only right after completeSale(), not when browsing history
+  let html = appBar('Receipt', { back:true });
+  html += '<div class="screen">';
+
+  if(fresh){
+    html += '<div style="text-align:center;padding:10px 0 22px 0;">'+
+      '<div style="width:64px;height:64px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 12px auto;">'+icon('check',30)+'</div>'+
+      '<div class="semibold sm">Payment successful</div>'+
+      '<div class="hero-value" style="margin-top:6px;">RWF '+fmt(r.total)+'</div>'+
+    '</div>';
+  }
+
+  html += '<div class="receipt-paper" style="border-radius:12px;overflow:hidden;border:1px solid var(--border);">';
+  html += '<div class="scallop-top"></div><div style="padding:0 16px;">';
+  html += '<div style="text-align:center;padding:14px 0;"><div class="bold sm">'+esc(r.businessName||state.businessName)+'</div><div class="xs faint" style="margin-top:2px;">Business address — configure in Settings</div></div>';
+  html += '<div class="dashed"></div><div class="mono xs" style="padding:10px 0;">'+
+    '<div class="row between"><span>Receipt</span><span>'+r.saleNumber+'</span></div>'+
+    '<div class="row between"><span>Date</span><span>'+fmtDate(r.timestamp)+'</span></div>'+
+    '<div class="row between"><span>Customer</span><span>'+esc(r.customerName)+'</span></div></div>';
+  html += '<div class="dashed"></div><div style="padding:10px 0;">';
+  r.items.forEach(it=>{
+    html += '<div class="xs" style="margin-bottom:8px;"><div class="row between medium"><span>'+esc(it.product.name)+'</span><span class="mono">'+fmt(it.lineTotal)+'</span></div>'+
+      '<div class="mono faint">'+it.qty+' × '+fmt(it.unitPrice)+'</div></div>';
+  });
+  html += '</div><div class="dashed"></div><div class="mono xs" style="padding:10px 0;">'+
+    '<div class="row between sm bold"><span>Total</span><span>RWF '+fmt(r.total)+'</span></div>'+
+    '<div class="row between muted" style="margin-top:4px;"><span>Payment</span><span>'+r.paymentMethod+'</span></div>';
+  if(r.paymentMethod==='Cash'){
+    html += '<div class="row between muted"><span>Cash received</span><span>RWF '+fmt(r.cashReceived)+'</span></div>'+
+      '<div class="row between accent"><span>Change</span><span>RWF '+fmt(r.change)+'</span></div>';
+  }
+  html += '</div><div class="dashed"></div><div class="xs faint" style="text-align:center;padding:10px 0;">Demo receipt — connects to WhatsApp/print adapters in production.</div>';
+  html += '</div><div class="scallop-bottom"></div></div>';
+
+  html += '<div class="row gap2" style="margin-top:12px;">'+
+    '<button class="btn grow" disabled style="opacity:.6;">'+icon('printer',13)+' Print</button>'+
+    '<button class="btn grow" disabled style="opacity:.6;">'+icon('message',13)+' Share</button></div>';
+  html += '<button class="btn btn-accent btn-block" data-action="goto-scan" style="margin-top:8px;">New sale</button>';
+  html += '<button class="btn btn-block" data-action="goto-tab-home" style="margin-top:8px;">Done</button>';
+  html += '</div>';
+  return html;
+}
+
+function renderSales(){
+  const sales = state.sales.slice().sort((a,b)=>b.timestamp-a.timestamp);
+  let html = appBar('Sales', { sub:sales.length+' this session' });
+  html += '<div class="screen">';
+  if(sales.length===0){ html += '<div class="empty">No sales yet. Completed sales appear here.</div></div>'; return html; }
+  html += '<div class="list">';
+  sales.forEach(s=>{
+    html += '<div class="list-item" data-action="open-receipt" data-id="'+s.id+'" style="cursor:pointer;"><div class="grow">'+
+      '<div class="row between xs medium"><span>'+s.saleNumber+'</span><span class="mono">RWF '+fmt(s.total)+'</span></div>'+
+      '<div class="row between xs faint" style="margin-top:4px;"><span>'+esc(s.customerName)+'</span><span>'+fmtDate(s.timestamp)+'</span></div>'+
+    '</div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function renderInventory(){
+  const q = state.search.toLowerCase();
+  let list = state.products.filter(p=>p.name.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q));
+  if(state.stockFilter==='low') list = list.filter(p=>{ const s=stockFor(p.id); return s>0 && s<state.lowStockThreshold; });
+  else if(state.stockFilter==='out') list = list.filter(p=>stockFor(p.id)<=0);
+  const attentionCount = state.products.filter(p=>stockFor(p.id)<state.lowStockThreshold).length;
+  let html = appBar('Inventory', { sub:attentionCount+' need'+(attentionCount===1?'s':'')+' attention' });
+  html += '<div class="screen">';
+  html += '<div class="row gap2 card" style="padding:9px 12px;margin-bottom:10px;">'+icon('search',14)+
+    '<input class="grow" data-bind="search" placeholder="Search products…" value="'+esc(state.search)+'" style="border:none;outline:none;font-size:13px;background:transparent;"/></div>';
+  html += '<div class="row gap2" style="margin-bottom:10px;">';
+  [['all','All'],['low','Low stock'],['out','Out of stock']].forEach(f=>{
+    html += '<div class="chip grow '+(state.stockFilter===f[0]?'active':'')+'" data-action="set-stock-filter" data-filter="'+f[0]+'">'+f[1]+'</div>';
+  });
+  html += '</div>';
+  html += '<div class="list">';
+  list.forEach(p=>{ html += productRow(p, {showSku:true}); });
+  html += '</div>';
+  if(list.length===0) html += '<div class="empty">No products match this filter.</div>';
+  html += '</div>';
+  return html;
+}
+
+function renderMoreSheet(){
+  if(!state.moreSheetOpen) return '';
+  const items = [
+    {id:'products',label:'Products',icon:'box',group:'Inventory'}, {id:'purchases',label:'Purchases',icon:'bag',group:'Inventory'},
+    {id:'customers',label:'Customers',icon:'users',group:'Inventory'},
+    {id:'expenses',label:'Expenses',icon:'wallet',group:'Finance'}, {id:'analytics',label:'Analytics',icon:'trending',group:'Finance'}, {id:'documents',label:'Documents',icon:'file',group:'Finance'},
+    {id:'notifications',label:'Notifications',icon:'bell',group:'Account'}, {id:'settings',label:'Settings',icon:'settings',group:'Account'},
+    {id:'devices',label:'Devices & sessions',icon:'device',group:'Account'}, {id:'profile',label:'Profile',icon:'usercircle',group:'Account'},
+  ];
+  let html = '<div class="sheet-overlay" data-action="close-more"><div class="sheet"><div class="sheet-handle"></div>';
+  let lastGroup = null;
+  items.forEach(it=>{
+    if(it.group!==lastGroup){ html += '<div class="sheet-group-label">'+esc(it.group)+'</div>'; lastGroup = it.group; }
+    html += '<button class="sheet-item" data-action="goto-more-screen" data-screen="'+it.id+'">'+icon(it.icon,17)+esc(it.label)+'</button>';
+  });
+  html += '<button class="sheet-item danger" data-action="logout" style="margin-top:4px;border-top:1px solid var(--border);padding-top:14px;">'+icon('logout',17)+'Log out</button>';
+  html += '</div></div>';
+  return html;
+}
+
+function renderCustomerPicker(){
+  if(state.pickerOpen!=='customer') return '';
+  let html = '<div class="sheet-overlay" data-action="close-picker"><div class="sheet"><div class="sheet-handle"></div>';
+  html += '<button class="sheet-item" data-action="pick-customer" data-name="Walk-in Customer">'+icon('usercircle',17)+'Walk-in Customer</button>';
+  state.customers.forEach(c=>{ html += '<button class="sheet-item" data-action="pick-customer" data-name="'+esc(c.name)+'">'+icon('usercircle',17)+esc(c.name)+'</button>'; });
+  html += '</div></div>';
+  return html;
+}
+
+function renderProductsScreen(){
+  const q = state.search.toLowerCase();
+  const list = state.products.filter(p=>p.name.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q));
+  let html = appBar('Products', { back:true, sub:state.products.length+' total', right:
+    '<button class="appbar-btn" data-action="toggle-add-product">'+icon(state.showAddProduct?'x':'plus',16)+'</button>' });
+  html += '<div class="screen">';
+  html += '<div class="row gap2 card" style="padding:9px 12px;margin-bottom:10px;">'+icon('search',14)+
+    '<input class="grow" data-bind="search" placeholder="Search products or SKU…" value="'+esc(state.search)+'" style="border:none;outline:none;font-size:13px;background:transparent;"/></div>';
+
+  if(state.showAddProduct){
+    html += '<div class="card" style="margin-bottom:12px;"><div class="xs semibold" style="margin-bottom:10px;">New product</div>'+
+      '<input class="input" data-bind="pfName" placeholder="Product name" value="'+esc(state.pfName)+'" style="margin-bottom:8px;"/>'+
+      '<select class="input" data-bind="pfCategory" style="margin-bottom:8px;">'+STANDARD_CATEGORIES.map(c=>'<option value="'+c+'" '+(state.pfCategory===c?'selected':'')+'>'+c+'</option>').join('')+'</select>'+
+      '<div class="row gap2" style="margin-bottom:8px;">'+
+        '<div class="grow"><div class="xs faint" style="margin-bottom:4px;">Min</div><input class="input mono" data-bind="pfMin" inputmode="decimal" value="'+esc(state.pfMin)+'"/></div>'+
+        '<div class="grow"><div class="xs faint" style="margin-bottom:4px;">Rec.</div><input class="input mono" data-bind="pfRec" inputmode="decimal" value="'+esc(state.pfRec)+'"/></div>'+
+        '<div class="grow"><div class="xs faint" style="margin-bottom:4px;">Max</div><input class="input mono" data-bind="pfMax" inputmode="decimal" value="'+esc(state.pfMax)+'"/></div>'+
+      '</div>'+
+      '<button class="btn btn-accent btn-block" data-action="create-product">'+icon('plus',13)+' Add product</button>'+
+      '<div class="xs faint" style="margin-top:8px;">Starts at 0 stock — receive a purchase to add inventory.</div>'+
+    '</div>';
+  }
+
+  html += '<div class="list">';
+  list.forEach(p=>{ html += productRow(p, {showSku:true}); });
+  html += '</div>';
+  return html;
+}
+
+function renderPurchasesScreen(){
+  const purchases = state.purchases.slice().sort((a,b)=>(b.receivedAt||b.purchaseDate)-(a.receivedAt||a.purchaseDate));
+  const draftCount = purchases.filter(p=>p.status==='DRAFT').length;
+  const supplierNames = Array.from(new Set(state.purchases.map(p=>p.supplierName))).sort();
+  let html = appBar('Purchases', { back:true, sub:draftCount+' draft'+(draftCount===1?'':'s')+' awaiting receipt' });
+  html += '<div class="screen">';
+  html += '<div class="card" style="margin-bottom:12px;"><div class="xs semibold" style="margin-bottom:10px;">New purchase (draft)</div>';
+  html += '<div class="xs faint" style="margin-bottom:4px;">Product</div><select class="input" data-bind="npProductId" style="margin-bottom:8px;"><option value="">Select…</option>'+
+    state.products.map(p=>'<option value="'+p.id+'" '+(state.npProductId===p.id?'selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select>';
+  html += '<div class="xs faint" style="margin-bottom:4px;">Supplier</div><input class="input" data-bind="npSupplier" list="supplierListM" placeholder="Supplier name" value="'+esc(state.npSupplier)+'" style="margin-bottom:8px;"/>'+
+    '<datalist id="supplierListM">'+supplierNames.map(s=>'<option value="'+esc(s)+'">').join('')+'</datalist>';
+  html += '<div class="row gap2">'+
+    '<div class="grow"><div class="xs faint" style="margin-bottom:4px;">Qty</div><input class="input mono" data-bind="npQty" inputmode="numeric" value="'+esc(state.npQty)+'"/></div>'+
+    '<div class="grow"><div class="xs faint" style="margin-bottom:4px;">Unit cost</div><input class="input mono" data-bind="npCost" inputmode="decimal" value="'+esc(state.npCost)+'"/></div></div>';
+  html += '<button class="btn btn-accent btn-block" data-action="create-purchase" style="margin-top:10px;">'+icon('plus',13)+' Create draft</button></div>';
+
+  html += '<div class="list">';
+  purchases.forEach(p=>{
+    const product = state.products.find(x=>x.id===p.productId);
+    const isDraft = p.status==='DRAFT';
+    html += '<div class="list-item"><div class="grow">'+
+      '<div class="row between xs medium"><span class="mono">'+p.purchaseNumber+'</span>'+(isDraft?'':'<span class="badge" style="background:var(--accent-soft);color:var(--accent);">Received</span>')+'</div>'+
+      '<div class="xs muted" style="margin-top:3px;">'+esc(product?product.name:'—')+' · '+p.quantity+' @ '+fmt(p.unitCost)+'</div>'+
+      '<div class="xs faint" style="margin-top:2px;">'+esc(p.supplierName)+' · '+fmtDateOnly(p.purchaseDate)+'</div>'+
+      '</div>'+
+      (isDraft?'<button class="btn" data-action="receive-purchase" data-id="'+p.id+'" style="padding:7px 12px;font-size:11px;flex-shrink:0;">'+icon('check',11)+' Receive</button>':'')+
+    '</div>';
+  });
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function renderCustomersScreen(){
+  const q = state.search.toLowerCase();
+  const list = state.customers.filter(c=>c.name.toLowerCase().includes(q)||c.phone.toLowerCase().includes(q));
+  const statsByName = {};
+  state.sales.forEach(sa=>{ if(!statsByName[sa.customerName]) statsByName[sa.customerName]={orders:0,total:0}; statsByName[sa.customerName].orders+=1; statsByName[sa.customerName].total+=sa.total; });
+  let html = appBar('Customers', { back:true, sub:state.customers.length+' total' });
+  html += '<div class="screen">';
+  html += '<div class="card" style="margin-bottom:12px;"><div class="xs semibold" style="margin-bottom:10px;">Add customer</div>'+
+    '<input class="input" data-bind="ncName" placeholder="Full name" value="'+esc(state.ncName)+'" style="margin-bottom:8px;"/>'+
+    '<input class="input" data-bind="ncPhone" placeholder="+250 7xx xxx xxx" value="'+esc(state.ncPhone)+'" style="margin-bottom:10px;"/>'+
+    '<button class="btn btn-accent btn-block" data-action="add-customer">'+icon('plus',13)+' Add customer</button></div>';
+  html += '<div class="row gap2 card" style="padding:9px 12px;margin-bottom:10px;">'+icon('search',14)+
+    '<input class="grow" data-bind="search" placeholder="Search customers…" value="'+esc(state.search)+'" style="border:none;outline:none;font-size:13px;background:transparent;"/></div>';
+  html += '<div class="list">';
+  list.forEach(c=>{
+    const st = statsByName[c.name]||{orders:0,total:0};
+    html += '<div class="list-item"><div class="monogram">'+esc(c.name.charAt(0))+'</div>'+
+      '<div class="grow"><div class="row between"><span class="semibold sm">'+esc(c.name)+'</span><span class="mono xs muted">RWF '+fmt(st.total)+'</span></div>'+
+      '<div class="xs muted" style="margin-top:2px;">'+esc(c.phone||'No phone on file')+' · '+st.orders+' order'+(st.orders===1?'':'s')+' this session</div></div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function renderExpensesScreen(){
+  const fin = computeFinanceSummary();
+  let html = appBar('Expenses', { back:true, sub:'Net profit RWF '+fmt(fin.netProfit) });
+  html += '<div class="screen">';
+  html += '<div class="row gap2" style="margin-bottom:12px;">';
+  html += '<div class="grow">'+statCard('Gross profit','RWF '+fmt(fin.grossProfit), fin.margin.toFixed(1)+'% margin')+'</div>';
+  html += '<div class="grow">'+statCard('Net profit','RWF '+fmt(fin.netProfit), 'After RWF '+fmt(fin.operatingExpenses), fin.netProfit>=0?'var(--accent)':'var(--danger)')+'</div>';
+  html += '</div>';
+  html += '<div class="card" style="margin-bottom:12px;"><div class="xs semibold" style="margin-bottom:10px;">Add expense</div>'+
+    '<select class="input" data-bind="neCategory" style="margin-bottom:8px;">'+EXPENSE_CATEGORIES.map(c=>'<option value="'+c+'" '+(state.neCategory===c?'selected':'')+'>'+c+'</option>').join('')+'</select>'+
+    '<input class="input" data-bind="neDescription" placeholder="Description" value="'+esc(state.neDescription)+'" style="margin-bottom:8px;"/>'+
+    '<input class="input mono" data-bind="neAmount" inputmode="decimal" placeholder="Amount (RWF)" value="'+esc(state.neAmount)+'" style="margin-bottom:10px;"/>'+
+    '<button class="btn btn-accent btn-block" data-action="add-expense">'+icon('plus',13)+' Add expense</button></div>';
+  html += '<div class="list">';
+  state.expenses.slice().sort((a,b)=>b.date-a.date).forEach(e=>{
+    html += '<div class="list-item"><div class="grow"><div class="row between xs"><span class="medium">'+esc(e.category)+'</span><span class="mono">RWF '+fmt(e.amount)+'</span></div>'+
+      '<div class="xs muted" style="margin-top:3px;">'+esc(e.description)+'</div><div class="xs faint" style="margin-top:2px;">'+fmtDateOnly(e.date)+' · '+esc(e.paymentMethod)+'</div></div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function renderAnalyticsScreen(){
+  const fin = computeFinanceSummary();
+  const revGrowth = pctChange(fin.revenue, HISTORY.lastWeekRevenue);
+  const windowDays = 7;
+  const stats = computeProductStats().map(s=>{
+    const velocity = s.units/windowDays; const coverageDays = velocity>0 ? s.stock/velocity : null;
+    return Object.assign({}, s, { velocity, coverageDays, reorderSoon: coverageDays!==null && coverageDays<windowDays });
+  }).sort((a,b)=>b.velocity-a.velocity);
+
+  let html = appBar('Analytics', { back:true });
+  html += '<div class="screen">';
+  html += '<div class="row gap2" style="margin-bottom:8px;">';
+  html += '<div class="grow">'+statCard('Revenue growth', (revGrowth>=0?'+':'')+revGrowth.toFixed(1)+'%', 'vs. last week', revGrowth>=0?'var(--accent)':'var(--danger)')+'</div>';
+  html += '<div class="grow">'+statCard('Margin', fin.margin.toFixed(1)+'%', 'RWF '+fmt(fin.grossProfit)+' gross')+'</div>';
+  html += '</div>';
+  html += '<div class="xs semibold" style="margin:12px 0 8px 0;">Sales velocity &amp; coverage</div>';
+  const maxVelocity = Math.max(1, ...stats.map(s=>s.velocity));
+  html += '<div class="list">';
+  stats.forEach(s=>{
+    html += '<div class="list-item" style="display:block;"><div class="row between xs medium">'+esc(s.product.name)+
+      (s.reorderSoon?'<span class="badge" style="background:var(--warn-soft);color:var(--warn);">REORDER SOON</span>':'')+'</div>'+
+      '<div class="bar-track" style="margin-top:7px;"><span class="bar-fill" style="display:block;width:'+(s.velocity/maxVelocity*100)+'%;background:'+PRODUCT_COLOR[s.product.id]+';"></span></div>'+
+      '<div class="row between xs muted" style="margin-top:6px;"><span>'+s.units+' units/7d · '+s.velocity.toFixed(1)+'/day</span><span>'+(s.coverageDays===null?'—':s.coverageDays.toFixed(1)+'d cover')+'</span></div></div>';
+  });
+  html += '</div>';
+  html += '<div class="xs faint" style="margin-top:8px;">"Reorder soon" = under '+windowDays+' days of estimated coverage — an example threshold.</div>';
+  html += '</div>';
+  return html;
+}
+
+function renderDocumentsScreen(){
+  const sales = state.sales.slice().sort((a,b)=>b.timestamp-a.timestamp);
+  let html = appBar('Documents', { back:true });
+  html += '<div class="screen">';
+  html += '<div class="card" style="margin-bottom:10px;"><div class="row gap2 xs">'+icon('info',14)+
+    '<span>This demo generates receipts only. Invoices and reports are additional document types production would support.</span></div></div>';
+  if(sales.length===0){ html += '<div class="empty">No documents yet — complete a sale to generate a receipt.</div></div>'; return html; }
+  html += '<div class="list">';
+  sales.forEach(s=>{
+    html += '<div class="list-item" data-action="open-receipt" data-id="'+s.id+'" style="cursor:pointer;"><div class="grow">'+
+      '<div class="row between xs medium"><span>'+s.saleNumber+'</span><span class="mono">RWF '+fmt(s.total)+'</span></div>'+
+      '<div class="xs faint" style="margin-top:3px;">Receipt · '+fmtDate(s.timestamp)+'</div></div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function renderNotifications(){
+  const lowStock = state.products.filter(p=>stockFor(p.id)<state.lowStockThreshold);
+  let html = appBar('Notifications', { back:true });
+  html += '<div class="screen">';
+  html += '<div class="card" style="margin-bottom:10px;"><div class="row gap2 xs">'+icon('info',14)+
+    '<span>These are generated live from current stock levels — there\u2019s no persisted notification/rules backend in this demo yet.</span></div></div>';
+  if(lowStock.length===0){ html += '<div class="empty">No alerts right now.</div>'; }
+  else lowStock.forEach(p=>{
+    const stock = stockFor(p.id);
+    html += '<div class="card" data-action="open-product" data-id="'+p.id+'" style="margin-bottom:8px;cursor:pointer;background:var(--danger-soft);border-color:var(--danger-soft);">'+
+      '<div class="row gap2 xs medium danger">'+icon('alert',14)+' Low stock: '+esc(p.name)+'</div>'+
+      '<div class="xs muted" style="margin-top:4px;">'+stock+' left · reorder below '+state.lowStockThreshold+'</div></div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderSettingsScreen(){
+  const categories = Array.from(new Set(state.products.map(p=>p.category))).sort();
+  let html = appBar('Settings', { back:true });
+  html += '<div class="screen">';
+  html += '<div class="card" style="margin-bottom:12px;"><div class="xs semibold" style="margin-bottom:10px;">Business profile</div>'+
+    '<div class="xs faint" style="margin-bottom:4px;">Business name</div><input class="input" data-bind="businessName" value="'+esc(state.businessName)+'" style="margin-bottom:10px;"/>'+
+    '<div class="row between xs"><span class="muted">Currency</span><span class="mono">RWF</span></div>'+
+    '<div class="row between xs" style="margin-top:4px;"><span class="muted">Timezone</span><span class="mono">Africa/Kigali</span></div></div>';
+  html += '<div class="card" style="margin-bottom:12px;"><div class="xs semibold" style="margin-bottom:10px;">Inventory</div>'+
+    '<div class="xs faint" style="margin-bottom:4px;">Low-stock threshold (units)</div>'+
+    '<input class="input mono" data-bind="lowStockThreshold" inputmode="numeric" value="'+state.lowStockThreshold+'" style="width:110px;"/></div>';
+  html += '<div class="card" style="margin-bottom:12px;"><div class="xs semibold" style="margin-bottom:8px;">Categories</div>'+
+    '<div class="row wrap gap2">'+categories.map(c=>'<span class="badge" style="background:var(--bg);color:var(--ink-muted);border:1px solid var(--border);">'+esc(c)+'</span>').join('')+'</div></div>';
+  html += '<div class="card" style="border-color:var(--danger);"><div class="xs semibold danger" style="margin-bottom:8px;">Danger zone</div>'+
+    '<button class="btn btn-block" data-action="reset-demo" style="color:var(--danger);border-color:var(--danger);">'+icon('rotate',13)+' Reset demo data</button></div>';
+  html += '</div>';
+  return html;
+}
+
+function renderDevices(){
+  let html = appBar('Devices & sessions', { back:true });
+  html += '<div class="screen">';
+  html += '<div class="card" style="margin-bottom:10px;"><div class="row gap2 xs">'+icon('info',14)+
+    '<span>Illustrative only — the real backend doesn\u2019t have device/session management endpoints yet, so this can\u2019t revoke anything real.</span></div></div>';
+  html += '<div class="card"><div class="row gap2"><div class="monogram">'+icon('device',17)+'</div>'+
+    '<div class="grow"><div class="semibold sm">This device</div><div class="xs muted">Mobile prototype · active now</div></div>'+
+    '<span class="badge" style="background:var(--accent-soft);color:var(--accent);">Current</span></div></div>';
+  html += '</div>';
+  return html;
+}
+
+function renderProfile(){
+  const biz = BUSINESSES.find(b=>b.id===state.activeBusinessId);
+  let html = '<div style="background:var(--ink);color:#fff;padding:28px 14px 34px 14px;border-radius:0 0 26px 26px;flex-shrink:0;position:relative;">'+
+    '<button class="appbar-btn" data-action="back" style="position:absolute;top:12px;left:12px;background:rgba(255,255,255,.14);border:none;color:#fff;">'+icon('arrowleft',16)+'</button>'+
+    '<div style="text-align:center;"><div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;margin:0 auto 10px auto;">DO</div>'+
+    '<div class="semibold sm">Demo Owner</div><div class="xs" style="margin-top:2px;color:rgba(255,255,255,.6);">'+esc(state.loginEmail||'demo@xr.rw')+'</div></div>'+
+  '</div>';
+  html += '<div class="screen" style="padding-top:16px;">';
+  html += '<div class="list" style="margin-bottom:14px;">'+
+    '<div class="list-item"><span class="xs muted grow">Business</span><span class="sm medium">'+esc(state.businessName)+'</span></div>'+
+    '<div class="list-item"><span class="xs muted grow">Role</span><span class="sm medium">'+esc(biz?biz.role:'Owner')+'</span></div>'+
+  '</div>';
+  html += '<div class="list"><button class="list-item" data-action="logout" style="width:100%;border:none;background:none;cursor:pointer;text-align:left;">'+
+    icon('logout',16)+'<span class="danger medium sm">Log out</span></button></div>';
+  html += '</div>';
+  return html;
+}
+
+// ---------------------------------------------------------------------
+// Root render
+// ---------------------------------------------------------------------
+const TAB_SCREENS = ['home','scan','sales','inventory'];
+function render(){
+  const app = document.getElementById('app');
+  let html = '<div class="phone">';
+  html += '<div class="statusbar"><span>9:41</span><span class="row gap1"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></div>';
+
+  if(!state.loggedIn){
+    html += renderLogin();
+  } else if(!state.businessSelected){
+    html += renderBusinessSelect();
+  } else {
+    if(state.screen==='home') html += renderHome();
+    else if(state.screen==='scan') html += renderScan();
+    else if(state.screen==='sales') html += renderSales();
+    else if(state.screen==='inventory') html += renderInventory();
+    else if(state.screen==='productDetail') html += renderProductDetail();
+    else if(state.screen==='cart') html += renderCart();
+    else if(state.screen==='receipt') html += renderReceipt();
+    else if(state.screen==='products') html += renderProductsScreen();
+    else if(state.screen==='purchases') html += renderPurchasesScreen();
+    else if(state.screen==='customers') html += renderCustomersScreen();
+    else if(state.screen==='expenses') html += renderExpensesScreen();
+    else if(state.screen==='analytics') html += renderAnalyticsScreen();
+    else if(state.screen==='documents') html += renderDocumentsScreen();
+    else if(state.screen==='notifications') html += renderNotifications();
+    else if(state.screen==='settings') html += renderSettingsScreen();
+    else if(state.screen==='devices') html += renderDevices();
+    else if(state.screen==='profile') html += renderProfile();
+    else html += renderHome();
+
+    if(state.cart.length>0 && state.screen!=='cart'){
+      html += '<button class="fab-cart" data-action="goto-cart">'+icon('cart',15)+' Cart <span class="count">'+state.cart.reduce((s,i)=>s+i.qty,0)+'</span></button>';
+    }
+
+    html += '<nav class="tabbar">';
+    [['home','Home','home'],['scan','Scan','scan'],['sales','Sales','receipt'],['inventory','Inventory','layers']].forEach(function(t){
+      var id=t[0], label=t[1], ic=t[2];
+      html += '<button class="'+(TAB_SCREENS.indexOf(state.screen)!==-1&&state.screen===id?'active':'')+'" data-action="goto-tab" data-tab="'+id+'">'+icon(ic,18)+'<span>'+label+'</span></button>';
+    });
+    html += '<button class="'+(state.moreSheetOpen?'active':'')+'" data-action="toggle-more">'+icon('morehoriz',18)+'<span>More</span></button>';
+    html += '</nav>';
+
+    html += renderMoreSheet();
+    html += renderCustomerPicker();
+  }
+
+  if(state.toast){
+    html += '<div class="toast" style="background:'+(state.toast.type==='error'?'var(--danger)':'var(--accent)')+';">'+icon(state.toast.type==='error'?'alert':'check',14)+' '+esc(state.toast.message)+'</div>';
+  }
+
+  html += '</div>';
+
+  let focusInfo = null;
+  const active = document.activeElement;
+  if(active && app.contains(active) && (active.tagName==='INPUT'||active.tagName==='SELECT')){
+    focusInfo = { bind:active.getAttribute('data-bind'), start:active.selectionStart, end:active.selectionEnd };
+  }
+
+  app.innerHTML = html;
+
+  if(focusInfo && focusInfo.bind){
+    const el = app.querySelector('[data-bind="'+focusInfo.bind+'"]');
+    if(el){ el.focus(); try{ el.setSelectionRange(focusInfo.start, focusInfo.end); }catch(e){} }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Event delegation
+// ---------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', function(){
+  const app = document.getElementById('app');
+
+  app.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-action]');
+    if(!btn) return;
+    const action = btn.getAttribute('data-action');
+    const id = btn.getAttribute('data-id');
+    if(action==='login'){ if(!state.loginEmail.trim()){ showToast('error','Enter an email to continue.'); return; } state.loggedIn=true; render(); }
+    else if(action==='select-business'){ state.activeBusinessId=id; state.businessSelected=true; state.screen='home'; render(); }
+    else if(action==='logout') logout();
+    else if(action==='back') goBack();
+    else if(action==='goto-tab') goToTab(btn.getAttribute('data-tab'));
+    else if(action==='goto-tab-home') goToTab('home');
+    else if(action==='goto-tab-sales') goToTab('sales');
+    else if(action==='goto-scan') goToTab('scan');
+    else if(action==='goto-purchases') goTo('purchases');
+    else if(action==='goto-cart') goTo('cart');
+    else if(action==='toggle-more') { state.moreSheetOpen = !state.moreSheetOpen; render(); }
+    else if(action==='close-more') { state.moreSheetOpen = false; render(); }
+    else if(action==='goto-more-screen') goTo(btn.getAttribute('data-screen'));
+    else if(action==='open-notifications') goTo('notifications');
+    else if(action==='open-product') goTo('productDetail', { productId:id });
+    else if(action==='add-to-cart') { addToCart(id, 1); showToast('success','Added to cart.'); }
+    else if(action==='cart-adjust') adjustCartQty(id, parseInt(btn.getAttribute('data-delta'),10));
+    else if(action==='remove-cart') removeFromCart(id);
+    else if(action==='open-customer-picker') { state.pickerOpen='customer'; render(); }
+    else if(action==='close-picker') { state.pickerOpen=null; render(); }
+    else if(action==='pick-customer') { state.customerName = btn.getAttribute('data-name'); state.pickerOpen=null; render(); }
+    else if(action==='set-payment') { state.paymentMethod = btn.getAttribute('data-method'); render(); }
+    else if(action==='set-stock-filter') { state.stockFilter = btn.getAttribute('data-filter'); render(); }
+    else if(action==='toggle-add-product') { state.showAddProduct = !state.showAddProduct; render(); }
+    else if(action==='create-product') createProduct();
+    else if(action==='complete-sale') completeSale();
+    else if(action==='open-receipt') goTo('receipt', { productId:id });
+    else if(action==='simulate-scan') { const p = state.products[state.scanRotation % state.products.length]; state.scanRotation++; goTo('productDetail', { productId:p.id }); }
+    else if(action==='create-purchase') createPurchase();
+    else if(action==='receive-purchase') receivePurchase(id);
+    else if(action==='add-customer') addCustomer();
+    else if(action==='add-expense') addExpense();
+    else if(action==='reset-demo') resetDemo();
+  });
+
+  app.addEventListener('input', function(e){
+    const el = e.target;
+    const bind = el.getAttribute && el.getAttribute('data-bind');
+    if(!bind) return;
+    if(bind==='loginEmail') state.loginEmail = el.value;
+    else if(bind==='loginPassword') state.loginPassword = el.value;
+    else if(bind==='search') state.search = el.value;
+    else if(bind==='cashReceived') state.cashReceived = el.value;
+    else if(bind==='npProductId') state.npProductId = el.value;
+    else if(bind==='npSupplier') state.npSupplier = el.value;
+    else if(bind==='npQty') state.npQty = el.value;
+    else if(bind==='npCost') state.npCost = el.value;
+    else if(bind==='ncName') state.ncName = el.value;
+    else if(bind==='ncPhone') state.ncPhone = el.value;
+    else if(bind==='neCategory') state.neCategory = el.value;
+    else if(bind==='neDescription') state.neDescription = el.value;
+    else if(bind==='neAmount') state.neAmount = el.value;
+    else if(bind==='pfName') state.pfName = el.value;
+    else if(bind==='pfCategory') state.pfCategory = el.value;
+    else if(bind==='pfMin') state.pfMin = el.value;
+    else if(bind==='pfRec') state.pfRec = el.value;
+    else if(bind==='pfMax') state.pfMax = el.value;
+    else if(bind==='businessName') state.businessName = el.value;
+    else if(bind==='lowStockThreshold') state.lowStockThreshold = parseInt(el.value,10)||0;
+    render();
+  });
+
+  render();
+});
+})();
+</script>
+</body>
+</html>

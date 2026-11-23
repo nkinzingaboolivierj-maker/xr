@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>XR — Full Product Engineering Documentation</title>
+<style>
+  :root{
+    --bg:#ffffff; --ink:#111318; --sub:#6b7280; --line:#e5e7eb;
+    --accent:#2563eb; --accent-soft:#eff4ff; --chip:#f3f4f6;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0b0c0f; --ink:#f2f3f5; --sub:#9aa1ac; --line:#22252b;
+      --accent:#5b8cff; --accent-soft:#131a2b; --chip:#161820;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b0c0f; --ink:#f2f3f5; --sub:#9aa1ac; --line:#22252b;
+    --accent:#5b8cff; --accent-soft:#131a2b; --chip:#161820;
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .deck{
+    width:100%; max-width:900px; height:min(94vh,600px);
+    border:1px solid var(--line); border-radius:16px;
+    display:flex; flex-direction:column; overflow:hidden; background:var(--bg);
+  }
+  .bar{display:flex; align-items:center; justify-content:space-between; padding:14px 28px; border-bottom:1px solid var(--line); flex-shrink:0;}
+  .brand{font-weight:700; letter-spacing:.02em; font-size:12.5px; color:var(--sub);}
+  .count{font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums;}
+  .stage{flex:1; padding:30px 40px; overflow-y:auto;}
+  .kicker{font-size:11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin:0 0 8px;}
+  h1{font-size:clamp(20px,3vw,28px); line-height:1.2; margin:0 0 6px; font-weight:700;}
+  .lede{color:var(--sub); font-size:14px; margin:0 0 18px; max-width:600px;}
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:8px 24px;}
+  ul.plain{list-style:none; margin:0; padding:0;}
+  ul.plain li{padding:7px 0; border-bottom:1px solid var(--line); font-size:13.5px; display:flex; gap:9px; align-items:baseline;}
+  ul.plain li:last-child{border-bottom:none;}
+  ul.plain li b{color:var(--ink); font-weight:600;}
+  ul.plain li span.d{color:var(--sub);}
+  .dot{width:5px; height:5px; border-radius:50%; background:var(--accent); flex-shrink:0; margin-top:6px;}
+  .chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:2px;}
+  .chip{background:var(--chip); border:1px solid var(--line); border-radius:999px; padding:5px 11px; font-size:12px;}
+  .flow{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:4px;}
+  .flow .step{background:var(--accent-soft); color:var(--accent); border-radius:8px; padding:6px 10px; font-size:12px; font-weight:600;}
+  .flow .arrow{color:var(--sub); font-size:12px;}
+  .note{margin-top:16px; font-size:12px; color:var(--sub); border-left:2px solid var(--accent); padding-left:10px;}
+  .sec{font-size:11px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:.06em; margin:14px 0 4px;}
+  .nav{display:flex; align-items:center; justify-content:space-between; padding:12px 28px; border-top:1px solid var(--line); flex-shrink:0;}
+  .dots{display:flex; gap:5px; flex-wrap:wrap; max-width:340px;}
+  .pip{width:5px; height:5px; border-radius:50%; background:var(--line);}
+  .pip.on{background:var(--accent);}
+  button{font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; border:1px solid var(--line); background:var(--bg); color:var(--ink); padding:7px 14px; border-radius:8px;}
+  button:disabled{opacity:.35; cursor:default;}
+  button:not(:disabled):hover{border-color:var(--accent); color:var(--accent);}
+  .hint{position:fixed; bottom:8px; font-size:11px; color:var(--sub);}
+</style>
+</head>
+<body>
+  <div class="deck">
+    <div class="bar"><div class="brand">XR · PRODUCT ENGINEERING</div><div class="count"><span id="cur">1</span> / <span id="tot"></span></div></div>
+    <div class="stage" id="stage"></div>
+    <div class="nav"><button id="prev">← Back</button><div class="dots" id="dots"></div><button id="next">Next →</button></div>
+  </div>
+  <div class="hint">← → to navigate</div>
+
+<script>
+const slides = [
+{kicker:"Documentation baseline", title:"XR Business Management & POS", lede:"Full product engineering documentation — from approved prototype to production-grade platform.", chips:["SRS","User Stories","Use Cases","C4","API Contract","GS1 · ISO · OWASP","Traceability"]},
+
+{kicker:"01 · User Requirement", title:"The business problem", lede:"The owner must always know the full lifecycle of stock and money — not guess it.", grid:["What was purchased, when, at what cost","How long stock has sat unsold (age)","How much sold, how much remains","Fast vs slow movers, demand shifts","Gross profit and net profit, not just revenue","Growth trends and items needing attention"]},
+
+{kicker:"02 · WHO / WHAT / WHY", title:"Actors, actions, motivation", cols:[["WHO","Owner · Manager · Cashier · Inventory Staff"],["WHAT","Classify, price, stock, sell, report"],["WHY","Wrong price or lost batch = real money lost"],["SCOPE","One canonical product, not a UI exercise"]]},
+
+{kicker:"03 · User Classes", title:"Roles and responsibilities", cols:[["Owner","Full visibility: profit, risk, all reports"],["Manager","Approves purchases, pricing, receiving"],["Cashier","Runs POS, takes payment, issues receipt"],["Inventory Staff","Receives stock, counts, adjusts, batches"]], note:"Permissions are granular and enforced server-side, never by UI visibility alone."},
+
+{kicker:"04 · Feature Justification", title:"Why each feature exists", cols:[["FIFO costing","Same product, different cost dates → correct COGS"],["GS1 GPC taxonomy","World-standard categories, not invented lists"],["Ledger inventory","Every stock change traceable, never silent"],["Idempotent sales","Network retry must never duplicate a sale"]]},
+
+{kicker:"05 · Functional Requirements (SRS core)", title:"FR-ID catalog by domain", grid:["FR-AUTH — authentication & sessions","FR-BUS / FR-CLS — business & classification","FR-PROD / FR-PRICE — products & pricing","FR-QR — scan & lookup","FR-SUP / FR-PUR / FR-REC — procurement","FR-INV / FR-FIFO — inventory & costing","FR-POS / FR-PAY — sales & payments","FR-CUS / FR-RET / FR-REF — customers, returns, refunds","FR-EXP / FR-FIN — expenses & finance","FR-ANL / FR-REP — analytics & reports","FR-DOC / FR-NOT — documents & notifications","FR-MOB / FR-SEC — mobile & security"], note:"Every FR has actor, precondition, flow, failure path and acceptance criteria."},
+
+{kicker:"06 · Business Rules", title:"Non-negotiable system rules", grid:["MIN ≤ RECOMMENDED ≤ MAX selling price","Negative stock is blocked by default","Every price/stock change is audited","FIFO batch allocation, never silently averaged","Stock age ≠ profit — separate metrics","Historical sales keep their original price snapshot","Backend is authoritative — frontend never trusted","Draft purchases never touch inventory"]},
+
+{kicker:"07 · User Stories + Acceptance Criteria", title:"From intent to testable behavior", flow:["User Story","→","FR-ID","→","Use Case","→","Acceptance Criteria","→","API","→","Test"], note:"Given a valid draft purchase, when received, then a batch is created, inventory increases, and the transaction rolls back entirely on any failure."},
+
+{kicker:"08 · Use Cases", title:"Use case catalog", grid:["Authentication & Session","Product & Classification","Procurement & Receiving","Inventory & Stock Adjustment","POS & Checkout","Sales & Payment","Customer Management","Returns & Refunds","Finance & Expense","Analytics & Reporting","Administration & RBAC"]},
+
+{kicker:"09 · Non-Functional Requirements", title:"Measurable system qualities", grid:["Performance — p50/p95/p99 on search, POS, reports","Security — auth, RBAC, tenant isolation","Reliability — atomic transactions, rollback","Scalability — 10k+ products, 100k+ sales targets","Auditability — full actor/action/before-after trail","Accessibility — WCAG 2.2 baseline","Maintainability — service-oriented, not screen-oriented","Recoverability — tested backup & restore"]},
+
+{kicker:"10 · World Standards & Compliance", title:"No invented taxonomies or codes", grid:["GS1 GPC 2026-05 — product classification (Segment→Brick)","GS1 General Specifications 26.0.0 — identifiers/barcodes","UNECE Rec.20 — standardized units of measure","ISO 4217 / 3166 / 8601 — currency, country, date-time","OpenAPI 3.2 — canonical API contract format","C4 Model — architecture visualization standard","OWASP ASVS 5.0.0 — security verification baseline","WCAG 2.2 / RFC 9457 — accessibility & API errors"], note:"Custom business tags/collections are allowed — but never replace the canonical standard."},
+
+{kicker:"11 · Prototype / UX Specification", title:"Approved reference UX", cols:[["Desktop","Sidebar nav + top bar (search, scan, +Sale)"],["Mobile","Bottom nav: Home / Scan / Sales / Inventory / More"],["Screens","Dashboard, POS, Products, Purchases, Inventory…"],["Status","Approved as UX reference, not production architecture"]]},
+
+{kicker:"12 · High-Level Architecture (SAD)", title:"Layered application structure", flow:["Controller","→","Service","→","Domain Logic","→","Repository","→","Database"], note:"External integrations (Payment, WhatsApp, Printer, Storage) are pluggable provider adapters."},
+
+{kicker:"13 · Domain / Microservice Map", title:"Target domain boundaries", grid:["Identity","Business","Catalog","Procurement","Inventory","Sales/POS","Payments","Customers","Returns","Finance","Analytics","Documents","Notifications","Audit/Security","AI Boundary"], note:"Current implementation may be a modular monolith — documented honestly, never overstated."},
+
+{kicker:"14 · C4 Model", title:"Four levels, one true architecture", flow:["C1 Context","→","C2 Containers","→","C3 Components","→","C4 Code"], note:"Diagrams must match the real repository — current vs target architecture always labelled separately."},
+
+{kicker:"15 · FE ↔ BE Contract", title:"What the client can rely on", grid:["Request/response schemas, versioned","Server-authoritative fields (price, stock, totals)","Standard error model (loading/empty/error/retry)","Pagination, filters, caching & invalidation rules","Idempotency keys on every mutating action","Offline/sync behavior explicitly defined"]},
+
+{kicker:"16 · API Contract", title:"docs/contracts/openapi.yaml", grid:["Auth, business, users, roles, permissions","Products, GPC classification, pricing, QR","Suppliers, purchases, receiving, inventory","POS, sales, payments, customers","Returns, refunds, expenses, finance","Analytics, reports, documents, audit"], note:"Every endpoint documents method, auth, validation, errors, idempotency and tenant scope."},
+
+{kicker:"17 · Data Architecture / Data Dictionary", title:"Core relational entities", grid:["businesses · users · roles · permissions","gpc_segments/families/classes/bricks","products · product_pricing · price_history","suppliers · purchases · purchase_items","inventory_batches · inventory_movements","customers · sales · sale_items · payments","returns · refunds","expenses · documents · audit_logs"]},
+
+{kicker:"18 · Inventory + FIFO + Stock Aging", title:"Traceable, ledger-based stock", flow:["B001: 20 @ 300","+","B002: 100 @ 330","→","Sale 25","→","COGS = 7,650"], note:"Stock age (e.g. 5 days since receipt) is an inventory metric — profit is calculated separately from Revenue and COGS."},
+
+{kicker:"19 · POS / Sales / Pricing / Stock In-Out", title:"Server-authoritative checkout", flow:["Scan/Search","→","Cart","→","Validate Price","→","Validate Stock","→","Payment","→","Sale"], note:"Backend revalidates stock, price and totals at submission — mobile and frontend values are never trusted."},
+
+{kicker:"20 · Finance: COGS / Gross Profit / Net Profit", title:"One trusted financial definition", cols:[["Gross Profit","Revenue − COGS"],["Net Profit","Gross Profit − Operating Expenses"],["Sale Total","≠ Cash Received (change calculated)"],["Source of truth","The transaction — documents are representations"]]},
+
+{kicker:"21 · Analytics: Velocity / Demand Trend", title:"Evidence-based intelligence only", cols:[["Sales Velocity","Units Sold ÷ time period (e.g. 26.7/day)"],["Demand Trend","(Current − Previous) ÷ Previous × 100%"],["No fake metrics","No invented business-health scores"],["Product Intelligence","Revenue, COGS, margin, stock age, risk — per product"]]},
+
+{kicker:"22 · Security", title:"Defense across every layer", grid:["Password hashing, session expiry & revocation","RBAC enforced server-side, not by UI hiding","Tenant/business isolation on every table","Full audit log: actor, action, before/after","Rate limiting & brute-force protection","OWASP ASVS 5.0.0 control mapping with evidence"]},
+
+{kicker:"23 · Mobile Architecture", title:"A first-class client, not a second system", flow:["Mobile UI","→","Secure API","→","Existing Backend","→","Existing Database"], note:"No duplicate business logic, no local database of record. Offline queue uses the same idempotency keys as web."},
+
+{kicker:"24 · Testing / QA", title:"Nothing is 'done' without evidence", grid:["Unit, integration, E2E, security, performance","Concurrent stock sale — one succeeds, one fails safely","Duplicate sale/webhook/refund — all blocked","Price below minimum / above maximum — blocked","Cross-business access — always denied","FIFO, COGS, Gross Profit — verified by test"]},
+
+{kicker:"25 · Production Deployment", title:"Real infrastructure, verified", grid:["HTTPS · API · PostgreSQL · Object Storage","Background workers · Queue · Monitoring","Health / readiness / liveness checks","Structured logs — secrets never logged","Development → Staging → Production separation"], note:"\"Deployed to production\" is only claimed once actually verified live."},
+
+{kicker:"26 · Backup / Recovery", title:"A backup is not valid until restored", grid:["Defined backup schedule & retention","Encryption at rest and in transit","Documented restore process & owner","Disaster recovery plan","Restore testing performed and logged"]},
+
+{kicker:"27 · Release Gates & Severity", title:"No P0/P1 blocker ships", cols:[["P0 Critical","Financial discrepancy, duplicate payment"],["P1 High","Authorization bypass, cross-business leak"],["P2 Medium","Non-critical UX or performance issue"],["P3 Low","Cosmetic / minor polish"]]},
+
+{kicker:"28 · Prototype Reconciliation", title:"Two prototypes → one canonical product", flow:["Prototype A","+","Prototype B","→","Reconciliation Matrix","→","ONE Product"], note:"Every feature is marked KEEP_A / KEEP_B / MERGE / REWORK / DEPRECATE — with a documented reason, never silently overwritten."},
+
+{kicker:"29 · Final Acceptance Workflow", title:"The full chain, proven end to end", flow:["Product+GPC","→","Purchase","→","Receive","→","Sale","→","Payment","→","COGS","→","Receipt","→","Return/Refund","→","Audit"]},
+
+{kicker:"30 · Definition of Done", title:"A screen is not a feature", grid:["UI + API + Database + Validation","Authorization + Business Logic + Audit","Error Handling + Tests + Documentation","Full requirement-to-test traceability"], note:"A feature is complete only when every one of these is verified — not assumed."},
+
+{kicker:"Next steps", title:"Where this goes from here", flow:["Reconcile 2 prototype ZIPs","→","Freeze SRS + Architecture","→","API/FE-BE Contracts","→","Real Backend","→","Security & Tests","→","Production"], note:"No stage is marked complete without code + tests + documentation + traceability together."}
+];
+
+let i = 0;
+const stage = document.getElementById('stage');
+const cur = document.getElementById('cur');
+const tot = document.getElementById('tot');
+const dotsEl = document.getElementById('dots');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+tot.textContent = slides.length;
+
+function renderDots(){ dotsEl.innerHTML = slides.map((_,idx)=>`<div class="pip ${idx===i?'on':''}"></div>`).join(''); }
+function chunk(arr,size){ const out=[]; for(let k=0;k<arr.length;k+=size) out.push(arr.slice(k,k+size)); return out; }
+
+function render(){
+  const s = slides[i];
+  let html = `<p class="kicker">${s.kicker}</p><h1>${s.title}</h1>`;
+  if(s.lede) html += `<p class="lede">${s.lede}</p>`;
+  if(s.chips) html += `<div class="chips">${s.chips.map(c=>`<span class="chip">${c}</span>`).join('')}</div>`;
+  if(s.flow) html += `<div class="flow">${s.flow.map(f=> f==='→' ? `<span class="arrow">→</span>` : (f==='+' ? `<span class="arrow">+</span>` : `<span class="step">${f}</span>`)).join('')}</div>`;
+  if(s.cols) html += `<div class="cols">${s.cols.map(([a,b])=>`<ul class="plain"><li><span class="dot"></span><span><b>${a}</b><br><span class="d">${b}</span></span></li></ul>`).join('')}</div>`;
+  if(s.grid) html += `<div class="cols">${chunk(s.grid,Math.ceil(s.grid.length/2)).map(col=>`<ul class="plain">${col.map(x=>`<li><span class="dot"></span>${x}</li>`).join('')}</ul>`).join('')}</div>`;
+  if(s.note) html += `<p class="note">${s.note}</p>`;
+  stage.innerHTML = html;
+  cur.textContent = i+1;
+  prevBtn.disabled = i===0;
+  nextBtn.disabled = i===slides.length-1;
+  renderDots();
+}
+
+prevBtn.addEventListener('click',()=>{ if(i>0){ i--; render(); }});
+nextBtn.addEventListener('click',()=>{ if(i<slides.length-1){ i++; render(); }});
+document.addEventListener('keydown',(e)=>{ if(e.key==='ArrowRight') nextBtn.click(); if(e.key==='ArrowLeft') prevBtn.click(); });
+render();
+</script>
+</body>
+</html>

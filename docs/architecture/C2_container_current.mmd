@@ -1,0 +1,22 @@
+flowchart LR
+  user["Staff (browser, phone or desktop)"]
+  subgraph host["One host / one container"]
+    direction TB
+    proxy["Reverse proxy - Caddy\nTLS, compression"]
+    subgraph app["XR process (Node 22, zero npm dependencies)"]
+      web["Static web app\npublic/ (vanilla JS, strict CSP)"]
+      api["HTTP API\nrouter + controllers + services"]
+      worker["Notification worker\n(in-process timer)"]
+    end
+    db[("SQLite file, WAL\n/data/xr.db")]
+    bk[("Backups\n/data/backups")]
+  end
+  pay["Payment providers\n(BLOCKED: no credentials)"]
+  wa["WhatsApp Business\n(BLOCKED: no credentials)"]
+  user -->|HTTPS| proxy --> web
+  proxy -->|"HTTPS JSON + Bearer token"| api
+  api --> db
+  worker --> db
+  api -. "adapter: MOCK only (disabled in production)" .-> pay
+  worker -. "adapter: MOCK only (disabled in production)" .-> wa
+  db -->|"VACUUM INTO (scripts/backup.js)"| bk

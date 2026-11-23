@@ -1,0 +1,23 @@
+C4Component
+  title C3 — Mobile (implemented API client + disconnected UX prototype vs target app)
+
+  Container_Boundary(current, "Current — two unconnected artifacts") {
+    Component(apiclient, "Mobile API Client", "JS library", "Wraps auth/products/suppliers/purchases/inventory/categories/users/audit. IMPLEMENTED, 11/11 tests.")
+    Component(uiproto, "Mobile UX Prototype", "Static HTML/JS", "xr-mobile-demo.html - Login/Scan/Cart/Receipt flow. In-memory only, NOT wired to apiclient.")
+  }
+
+  Container_Boundary(target, "Target — Production Mobile Application") {
+    Component(mui, "Mobile UI Screens", "Expo/React Native", "TARGET - per approved UX prototype")
+    Component(mfeatures, "Feature Modules", "TARGET", "POS / Inventory / Customers / Expenses / Analytics / Documents / Settings")
+    Component(secure, "Secure Storage", "TARGET", "Session tokens, minimal cache")
+    Component(sync, "Sync / Offline Layer", "TARGET", "operation_id queue, ONLINE/OFFLINE/SYNCING/CONFLICT")
+  }
+
+  System_Ext(api, "XR API Application", "Existing backend; sales/payments/customers/etc. still TARGET")
+
+  Rel(apiclient, api, "Calls implemented endpoints", "HTTP, tested")
+  Rel(mfeatures, apiclient, "Will call through", "TARGET - reuse existing client")
+  Rel(mui, mfeatures, "Composed into", "TARGET")
+  Rel(mfeatures, secure, "Reads session from", "TARGET")
+  Rel(mfeatures, sync, "Queues writes through", "TARGET")
+  Rel(sync, apiclient, "Replays queued operations", "TARGET")

@@ -1,0 +1,37 @@
+# Single-host production layout: XR + Caddy (automatic HTTPS).
+#   1. cp .env.example .env   (fill in)
+#   2. set your domain in Caddyfile
+#   3. docker compose up -d --build
+#   4. docker compose run --rm xr node scripts/bootstrap.js --business "My Shop" --email you@example.com
+# XR is a SINGLE-INSTANCE service (SQLite file + in-process worker + in-memory rate limiter): do not scale xr beyond 1 replica.
+services:
+  xr:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      XR_DB_FILE: /data/xr.db
+      TRUST_PROXY: "true"
+    volumes:
+      - xr-data:/data
+    expose:
+      - "3000"
+    deploy:
+      replicas: 1
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on: [xr]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  xr-data:
+  caddy-data:
+  caddy-config:

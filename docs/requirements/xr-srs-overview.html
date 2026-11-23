@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>XR — Product Engineering Overview</title>
+<style>
+  :root{
+    --bg:#ffffff; --ink:#111318; --sub:#6b7280; --line:#e5e7eb;
+    --accent:#2563eb; --accent-soft:#eff4ff; --chip:#f3f4f6;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0b0c0f; --ink:#f2f3f5; --sub:#9aa1ac; --line:#22252b;
+      --accent:#5b8cff; --accent-soft:#131a2b; --chip:#161820;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b0c0f; --ink:#f2f3f5; --sub:#9aa1ac; --line:#22252b;
+    --accent:#5b8cff; --accent-soft:#131a2b; --chip:#161820;
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .deck{
+    width:100%; max-width:860px; height:min(92vh,560px);
+    border:1px solid var(--line); border-radius:16px;
+    display:flex; flex-direction:column; overflow:hidden;
+    background:var(--bg);
+  }
+  .bar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px; border-bottom:1px solid var(--line); flex-shrink:0;
+  }
+  .brand{font-weight:700; letter-spacing:.02em; font-size:13px; color:var(--sub);}
+  .count{font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums;}
+  .stage{
+    flex:1; padding:36px 44px; overflow-y:auto;
+  }
+  .kicker{
+    font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent); margin:0 0 10px;
+  }
+  h1{
+    font-size:clamp(22px,3.4vw,32px); line-height:1.2; margin:0 0 6px; font-weight:700;
+  }
+  .lede{color:var(--sub); font-size:15px; margin:0 0 22px; max-width:520px;}
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:10px 28px;}
+  ul.plain{list-style:none; margin:0; padding:0;}
+  ul.plain li{
+    padding:9px 0; border-bottom:1px solid var(--line);
+    font-size:14.5px; display:flex; gap:10px; align-items:baseline;
+  }
+  ul.plain li:last-child{border-bottom:none;}
+  ul.plain li b{color:var(--ink); font-weight:600;}
+  ul.plain li span.d{color:var(--sub);}
+  .dot{width:5px; height:5px; border-radius:50%; background:var(--accent); flex-shrink:0; margin-top:6px;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;}
+  .chip{
+    background:var(--chip); border:1px solid var(--line); border-radius:999px;
+    padding:6px 12px; font-size:12.5px; color:var(--ink);
+  }
+  .flow{
+    display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:6px;
+  }
+  .flow .step{
+    background:var(--accent-soft); color:var(--accent); border-radius:8px;
+    padding:6px 10px; font-size:12.5px; font-weight:600;
+  }
+  .flow .arrow{color:var(--sub); font-size:13px;}
+  .note{
+    margin-top:20px; font-size:12.5px; color:var(--sub); border-left:2px solid var(--accent);
+    padding-left:10px;
+  }
+  .nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; border-top:1px solid var(--line); flex-shrink:0;
+  }
+  .dots{display:flex; gap:6px;}
+  .pip{width:6px; height:6px; border-radius:50%; background:var(--line);}
+  .pip.on{background:var(--accent);}
+  button{
+    font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;
+    border:1px solid var(--line); background:var(--bg); color:var(--ink);
+    padding:8px 16px; border-radius:8px;
+  }
+  button:disabled{opacity:.35; cursor:default;}
+  button:not(:disabled):hover{border-color:var(--accent); color:var(--accent);}
+  .hint{position:fixed; bottom:10px; font-size:11px; color:var(--sub);}
+</style>
+</head>
+<body>
+  <div class="deck">
+    <div class="bar">
+      <div class="brand">XR · PRODUCT ENGINEERING</div>
+      <div class="count"><span id="cur">1</span> / <span id="tot">7</span></div>
+    </div>
+    <div class="stage" id="stage"></div>
+    <div class="nav">
+      <button id="prev">← Back</button>
+      <div class="dots" id="dots"></div>
+      <button id="next">Next →</button>
+    </div>
+  </div>
+  <div class="hint">Use ← → to navigate</div>
+
+<script>
+const slides = [
+  {
+    kind:"title",
+    kicker:"Documentation baseline",
+    title:"XR Business Management & POS",
+    lede:"From an approved UI prototype to a production-grade, standards-based platform — starting with a single, traceable set of requirements.",
+    chips:["SRS","User Stories","Use Cases","C4 Architecture","API Contract","GS1 · ISO · OWASP"]
+  },
+  {
+    kicker:"Product vision",
+    title:"The problem this solves",
+    lede:"A business owner should always know what was bought, when, at what cost, how long it sat in stock, and whether it made money.",
+    cols:[
+      ["WHO", "Owner · Manager · Cashier · Inventory Staff"],
+      ["WHAT", "Track stock in/out, sell, price correctly, see profit"],
+      ["WHY", "Stock age is not profit — profit comes from Revenue − COGS − Expenses"],
+      ["SCOPE", "One canonical product; not a UI exercise or MVP"]
+    ]
+  },
+  {
+    kicker:"SRS · Functional Requirements",
+    title:"What the system must do",
+    lede:"Each domain below is a formal FR block (e.g. FR-INV-001) with actor, preconditions, flow and acceptance criteria.",
+    grid:[
+      "Auth · RBAC · Business isolation",
+      "Product & GS1 GPC classification",
+      "Suppliers & procurement",
+      "Purchase receiving → batches",
+      "Inventory ledger · FIFO · aging",
+      "POS · cart · server-side pricing",
+      "Sales · payments · idempotency",
+      "Customers · returns · refunds",
+      "Finance: revenue, COGS, profit",
+      "Analytics · reports",
+      "Documents · WhatsApp delivery",
+      "Audit · security · backup"
+    ]
+  },
+  {
+    kicker:"SRS · Non-Functional + Business Rules",
+    title:"How it must behave",
+    lede:"Measurable qualities, plus the rules that keep every module honest.",
+    cols:[
+      ["Security","AuthN/AuthZ, tenant isolation, audit trail"],
+      ["Reliability","Atomic transactions, rollback on failure"],
+      ["Performance","p50/p95/p99 targets on search, POS, reports"],
+      ["Auditability","Every price, stock & sale change is logged"]
+    ],
+    flow:["Min price","≤","Recommended","≤","Max price — backend enforces"],
+    note:"Rule: stock age is an inventory metric, not a profit signal. Profit = Revenue − COGS − Expenses, always."
+  },
+  {
+    kicker:"User classes → stories → use cases",
+    title:"One requirement, fully traced",
+    lede:"No user story exists without a matching functional requirement and test.",
+    flow:["User Story","→","FR-ID","→","Use Case","→","Acceptance Criteria","→","API","→","Test"],
+    grid:[
+      "Owner — sees profit & risk",
+      "Manager — approves purchases, prices",
+      "Cashier — runs POS, takes payment",
+      "Inventory Staff — receives stock, counts"
+    ]
+  },
+  {
+    kicker:"Architecture",
+    title:"C4 model, honestly labelled",
+    lede:"Diagrams describe the real codebase — current state and target state are never mixed.",
+    flow:["C1 Context","→","C2 Containers","→","C3 Components","→","C4 Code"],
+    cols:[
+      ["Current","Modular monolith (documented as such)"],
+      ["Target","Domain services: Catalog, Inventory, Sales, Finance…"],
+      ["Contracts","OpenAPI + FE↔BE contract, one source of truth"],
+      ["Standards","GS1 GPC · UNECE R20 · ISO 4217/3166/8601 · OWASP ASVS"]
+    ]
+  },
+  {
+    kind:"end",
+    kicker:"Next",
+    title:"Where this goes from here",
+    lede:"Documentation first, then one canonical product, then real backend and production.",
+    flow:["Reconcile 2 prototypes","→","Freeze SRS + Architecture","→","API contracts","→","Real backend","→","Security & tests","→","Production"],
+    note:"No stage is marked done without evidence: code + tests + docs + traceability together."
+  }
+];
+
+let i = 0;
+const stage = document.getElementById('stage');
+const cur = document.getElementById('cur');
+const tot = document.getElementById('tot');
+const dotsEl = document.getElementById('dots');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+tot.textContent = slides.length;
+
+function renderDots(){
+  dotsEl.innerHTML = slides.map((_,idx)=>`<div class="pip ${idx===i?'on':''}"></div>`).join('');
+}
+
+function render(){
+  const s = slides[i];
+  let html = `<p class="kicker">${s.kicker}</p><h1>${s.title}</h1>`;
+  if(s.lede) html += `<p class="lede">${s.lede}</p>`;
+  if(s.chips) html += `<div class="chips">${s.chips.map(c=>`<span class="chip">${c}</span>`).join('')}</div>`;
+  if(s.flow) html += `<div class="flow">${s.flow.map(f=> f==='→' ? `<span class="arrow">→</span>` : (f==='≤' ? `<span class="arrow">≤</span>` : `<span class="step">${f}</span>`)).join('')}</div>`;
+  if(s.cols) html += `<div class="cols">${s.cols.map(([a,b])=>`<ul class="plain"><li><span class="dot"></span><span><b>${a}</b><br><span class="d">${b}</span></span></li></ul>`).join('')}</div>`;
+  if(s.grid) html += `<div class="cols">${chunk(s.grid,Math.ceil(s.grid.length/2)).map(col=>`<ul class="plain">${col.map(x=>`<li><span class="dot"></span>${x}</li>`).join('')}</ul>`).join('')}</div>`;
+  if(s.note) html += `<p class="note">${s.note}</p>`;
+  stage.innerHTML = html;
+  cur.textContent = i+1;
+  prevBtn.disabled = i===0;
+  nextBtn.disabled = i===slides.length-1;
+  renderDots();
+}
+function chunk(arr,size){ const out=[]; for(let k=0;k<arr.length;k+=size) out.push(arr.slice(k,k+size)); return out; }
+
+prevBtn.addEventListener('click',()=>{ if(i>0){ i--; render(); }});
+nextBtn.addEventListener('click',()=>{ if(i<slides.length-1){ i++; render(); }});
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='ArrowRight') nextBtn.click();
+  if(e.key==='ArrowLeft') prevBtn.click();
+});
+
+render();
+</script>
+</body>
+</html>

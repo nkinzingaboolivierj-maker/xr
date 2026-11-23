@@ -1,0 +1,22 @@
+{
+  "name": "xr-system",
+  "version": "1.2.4",
+  "description": "XR Business Management & POS - backend API + bundled web app (Node.js built-in modules only, zero npm dependencies)",
+  "type": "commonjs",
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "test": "node --test tests/stage1.test.js tests/stage2.test.js tests/stage3.test.js tests/stage4.test.js tests/stage5.test.js tests/stage6.test.js tests/stage7.test.js tests/stage8.test.js tests/stage9.test.js tests/stage10.test.js tests/stage11.test.js tests/stage12.test.js tests/stage13.test.js",
+    "e2e": "node e2e/e2e.js",
+    "openapi": "node scripts/generate-openapi.js",
+    "bootstrap": "node scripts/bootstrap.js",
+    "backup": "node scripts/backup.js",
+    "restore": "node scripts/restore.js",
+    "reset-password": "node scripts/reset-password.js"
+  },
+  "dependencies": {}
+}

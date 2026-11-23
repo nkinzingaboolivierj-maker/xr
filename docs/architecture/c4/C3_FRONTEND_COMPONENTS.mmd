@@ -1,0 +1,20 @@
+C4Component
+  title C3 — Web Frontend (current prototype vs target production shape)
+
+  Container_Boundary(current, "Current: xr-pos-demo.html (single static file)") {
+    Component(monolith, "In-memory UI script", "Vanilla JS", "Renders all 11 tabs directly from local state. No API calls. UX reference only.")
+  }
+
+  Container_Boundary(target, "Target: Production Web Application") {
+    Component(ui, "UI Components", "TBD framework", "TARGET")
+    Component(features, "Feature Modules", "TARGET", "POS / Products / Purchases / Inventory / Sales / Customers / Expenses / Analytics / Documents / Settings")
+    Component(apiclient, "API Client", "TARGET", "Auth, base URL, error normalization, retries")
+    Component(state, "State / Data Layer", "TARGET", "Server-driven, never authoritative on its own")
+  }
+
+  System_Ext(api, "XR API Application", "Existing backend (Stage 1+2 implemented)")
+
+  Rel(ui, features, "Composed into", "TARGET")
+  Rel(features, state, "Reads/writes via", "TARGET")
+  Rel(state, apiclient, "Fetches through", "TARGET")
+  Rel(apiclient, api, "Calls", "HTTPS/JSON [TARGET]")

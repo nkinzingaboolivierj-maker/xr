@@ -1,0 +1,6 @@
+# Replace shop.example.com with your domain (DNS A/AAAA record pointing at this host).
+# Caddy obtains and renews the TLS certificate automatically.
+shop.example.com {
+	encode zstd gzip
+	reverse_proxy xr:3000
+}

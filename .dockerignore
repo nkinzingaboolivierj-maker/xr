@@ -1,0 +1,11 @@
+.git
+node_modules
+.env
+data
+backups
+*.db
+*.db-wal
+*.db-shm
+e2e
+tests
+docs

@@ -1,0 +1,24 @@
+C4Context
+  title C1 — XR System Context (current actors confirmed; external systems = TARGET)
+
+  Person(owner, "Business Owner", "Full visibility: profit, risk, reports")
+  Person(manager, "Manager", "Approves purchases, pricing, receiving")
+  Person(cashier, "Cashier", "Runs POS, takes payment [POS = TARGET]")
+  Person(invstaff, "Inventory Staff", "Receives stock, batches, adjustments")
+
+  System(xr, "XR Platform", "Business management + POS. Modular-monolith Node.js backend (Stage 1+2 implemented).")
+
+  System_Ext(payment, "Payment Provider", "TARGET - not integrated")
+  System_Ext(whatsapp, "WhatsApp Provider", "TARGET - not integrated")
+  System_Ext(storage, "Object Storage", "TARGET - not integrated")
+  System_Ext(gpc, "GS1 GPC Source", "TARGET - taxonomy import not built")
+
+  Rel(owner, xr, "Views reports, manages business")
+  Rel(manager, xr, "Approves purchases, pricing")
+  Rel(cashier, xr, "Runs sales [target]")
+  Rel(invstaff, xr, "Receives stock, adjusts inventory")
+
+  Rel(xr, payment, "Initiates payment, verifies webhook", "TARGET")
+  Rel(xr, whatsapp, "Delivers receipts/alerts", "TARGET")
+  Rel(xr, storage, "Stores documents", "TARGET")
+  Rel(xr, gpc, "Imports taxonomy version", "TARGET")

@@ -1,0 +1,24 @@
+import { get, post, newOperationId, errorMessage } from '../api.js';
+import { h, mount, money, dateTime, pageHead, tabs, input, field, select, button, formModal, table, pill, statusPill, load, toast } from '../dom.js';
+import { state, can } from '../state.js';
+
+export async function render() {
+  const host = h('div', {}); let tab = 'intents';
+  const views = {
+    intents: () => load(host, async () => { const rows = await get('/payment-intents');
+      return h('div', {}, !can('payment.write') ? null : h('div', { class: 'alert info' }, 'Payment requests are sent to Airtel Money, MTN MoMo or a card processor. The payment is confirmed only by the provider (signed callback), never by the screen.'),
+        h('div', { class: 'card flush' }, table([{ label: 'When', render: (p) => dateTime(p.createdAt) }, { label: 'Method', render: (p) => `${p.method}${p.network ? ' · ' + p.network.replace('_', ' ') : ''}` }, { label: 'Amount', right: true, render: (p) => money(p.amount) }, { label: 'Status', render: (p) => statusPill(p.status) }, { label: 'Sale', render: (p) => (p.saleId ? h('a', { href: `#/sales/${p.saleId}` }, p.saleId.slice(-8)) : pill('Not attached', p.status === 'SUCCESS' ? 'warn' : '')) }, { label: '', render: (p) => (p.status === 'PENDING' || p.status === 'INITIATED' ? button('Refresh', { kind: 'small', onClick: async () => { try { await get(`/payment-intents/${p.id}`); views.intents(); } catch (e) { toast(errorMessage(e), 'bad'); } } }) : null) }], rows, { empty: 'No payment requests yet.', caption: 'Payment requests' }))); }),
+    unreconciled: () => load(host, async () => { const rows = await get('/payments/unreconciled');
+      return h('div', {}, h('div', { class: 'alert warn' }, 'These payments were confirmed by the provider but are not linked to a sale. Money was received — match each one to the sale it belongs to.'),
+        h('div', { class: 'card flush' }, table([{ label: 'Confirmed', render: (p) => dateTime(p.updatedAt || p.createdAt) }, { label: 'Method', key: 'method' }, { label: 'Amount', right: true, render: (p) => money(p.amount) }, { label: 'Provider ref', render: (p) => h('span', { class: 'mono' }, p.providerReference) }, { label: '', render: (p) => button('Attach to sale', { kind: 'small', onClick: () => attach(p) }) }], rows, { empty: 'Everything is reconciled. ✓', caption: 'Unreconciled payments' }))); }),
+  };
+  function attach(p) { formModal({ title: 'Attach payment to sale', submitLabel: 'Attach', build: () => { const sale = input({ required: true, placeholder: 'Sale ID (see Sales)' }); return { fields: h('div', {}, h('p', {}, `${money(p.amount)} · ${p.method}`), field('Sale ID', sale, { hint: 'The amount, currency and method must match the sale exactly; the server verifies this.' })), collect: () => { if (!sale.value.trim()) throw new Error('Enter the sale ID.'); return { saleId: sale.value.trim() }; } }; }, submit: async (b) => { await post(`/payment-intents/${p.id}/attach-sale`, b); toast('Payment attached', 'ok'); views.unreconciled(); } }); }
+  function request() { formModal({ title: 'New payment request', submitLabel: 'Send request', build: () => {
+    const method = select([['MobileMoney', 'Mobile Money'], ['Card', 'Card']]); const net = select([['AIRTEL_MONEY', 'Airtel Money'], ['MTN_MOMO', 'MTN MoMo']]); const amount = input({ type: 'number', min: 0, step: 'any', required: true }); const phone = input({ type: 'tel', placeholder: '07…' }); const key = newOperationId('pi');
+    const netField = field('Network', net); const phoneField = field('Customer phone', phone); const sync = () => { netField.hidden = phoneField.hidden = method.value === 'Card'; }; method.addEventListener('change', sync); sync();
+    return { fields: h('div', { class: 'form-grid' }, field('Method', method), netField, field(`Amount (${state.business.currency})`, amount), phoneField), collect: () => { if (!(Number(amount.value) > 0)) throw new Error('Enter an amount above zero.'); return { method: method.value, network: method.value === 'Card' ? undefined : net.value, amount: Number(amount.value), customerPhone: method.value === 'Card' ? undefined : phone.value.trim() || undefined, idempotencyKey: key }; } };
+  }, submit: async (b) => { try { await post('/payment-intents', b); toast('Payment request sent', 'ok'); views.intents(); } catch (e) { if (e.status === 503) throw new Error('No payment provider is connected yet (Airtel / MTN / card credentials are required). Use manual confirmation at the POS until then.'); throw e; } } }); }
+  const root = h('div', {}, pageHead('Payments', 'Provider payments and reconciliation', can('payment.write') && button('New payment request', { kind: 'primary', onClick: request })),
+    tabs([['intents', 'Payment requests'], ...(can('payment.reconcile') ? [['unreconciled', 'Unreconciled']] : [])], tab, (t) => { tab = t; views[t](); }), host);
+  views.intents(); return root;
+}

@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>XR — Business Management &amp; POS (Demo)</title>
+<style>
+  :root{
+    --bg:#F6F5F1; --surface:#FFFFFF; --ink:#161F1A; --ink-muted:#6E7469; --ink-faint:#A7AA9F;
+    --border:#E4E1D8; --line:#EDEAE1; --accent:#1F6F55; --accent-soft:#E6F1EC;
+    --warn:#A9752B; --warn-soft:#FBF0DE; --danger:#AE4230; --danger-soft:#FBEAE5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  #app{position:relative;width:100%;height:min(680px,92vh);border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg);}
+  .mono{font-family:ui-monospace,SFMono-Regular,"Roboto Mono",Menlo,monospace;font-variant-numeric:tabular-nums;}
+  .row{display:flex;align-items:center;}
+  .between{justify-content:space-between;}
+  .wrap{flex-wrap:wrap;}
+  .gap1{gap:4px;} .gap2{gap:8px;} .gap3{gap:12px;}
+  .grow{flex:1;}
+  .small{font-size:11px;} .xs{font-size:12px;} .sm{font-size:13px;} .base{font-size:14px;} .lg{font-size:18px;}
+  .muted{color:var(--ink-muted);} .faint{color:var(--ink-faint);} .accent{color:var(--accent);} .danger{color:var(--danger);}
+  .semibold{font-weight:600;} .bold{font-weight:700;} .medium{font-weight:500;}
+  .hero-label{font-size:12px;color:var(--ink-muted);}
+  .hero-value{font-size:40px;font-weight:700;letter-spacing:-0.02em;line-height:1.05;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;}
+  .list{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .list-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);}
+  .list-item:last-child{border-bottom:none;}
+  .chip-row{display:flex;gap:6px;}
+  .chip{border:1px solid var(--border);background:#fff;color:var(--ink-muted);border-radius:999px;padding:6px 13px;font-size:11px;font-weight:600;cursor:pointer;}
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .btn{border:none;cursor:pointer;border-radius:9px;font-size:12px;font-weight:600;padding:8px 13px;display:inline-flex;align-items:center;gap:6px;background:var(--surface);color:var(--ink);border:1px solid var(--border);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-accent{background:var(--accent);color:#fff;border:none;}
+  .btn-dark{background:var(--ink);color:#fff;border:none;}
+  .btn-block{width:100%;justify-content:center;padding:11px;font-size:13px;}
+  input{font:inherit;color:inherit;}
+  .input{border:1px solid transparent;border-radius:9px;padding:7px 10px;font-size:12px;outline:none;background:var(--bg);width:100%;transition:border-color .12s ease;}
+  .input:focus{border-color:var(--accent);background:#fff;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;}
+  .brandmark{width:34px;height:34px;border-radius:9px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+  .banner{background:var(--warn-soft);border-bottom:1px solid var(--border);padding:8px 18px;font-size:12px;color:#6B5220;display:flex;gap:8px;align-items:flex-start;}
+  .content{padding:18px;}
+  .grid{display:grid;gap:12px;}
+  .grid-stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+  .grid-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
+  .grid-products{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+  .pos-layout{display:grid;grid-template-columns:1fr;gap:16px;}
+  @media(min-width:760px){.pos-layout{grid-template-columns:3fr 2fr;}}
+  .pos-products{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{text-align:left;font-weight:500;color:var(--ink-muted);background:var(--bg);padding:8px 12px;}
+  td{padding:8px 12px;border-top:1px solid var(--line);}
+  tr.saleRow{cursor:pointer;}
+  tr.saleRow:hover{background:rgba(0,0,0,0.02);}
+  .bar-track{height:6px;border-radius:99px;background:var(--accent-soft);overflow:hidden;display:block;}
+  .bar-fill{height:100%;background:var(--accent);border-radius:99px;display:block;}
+  .empty{text-align:center;color:var(--ink-faint);padding:24px 0;font-size:12px;}
+  .cart-item{border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;}
+  .qtybox{display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;background:#fff;}
+  .qtybox button{border:none;background:transparent;padding:5px 8px;cursor:pointer;color:var(--ink);}
+  .addbtn{width:30px;height:30px;padding:0;justify-content:center;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;}
+  .payment-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0;}
+  .paymethod{border:1px solid var(--border);background:#fff;color:var(--ink-muted);border-radius:8px;padding:7px 4px;font-size:11px;cursor:pointer;}
+  .paymethod.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .toast{position:absolute;right:18px;bottom:18px;color:#fff;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(0,0,0,.18);z-index:60;}
+  .modal-overlay{position:absolute;inset:0;background:rgba(27,30,26,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .receipt{width:100%;max-width:340px;display:flex;flex-direction:column;max-height:92%;}
+  .scallop-top{height:12px;background-color:#fff;background-image:radial-gradient(circle at 10px 10px, var(--bg) 9px, transparent 9.5px);background-size:20px 20px;}
+  .scallop-bottom{height:12px;background-color:#fff;background-image:radial-gradient(circle at 10px 0px, var(--bg) 9px, transparent 9.5px);background-size:20px 20px;}
+  .receipt-body{background:#fff;overflow-y:auto;padding:0 18px;}
+  .dashed{border-top:1px dashed var(--border);}
+  .icon{vertical-align:middle;display:inline-block;flex-shrink:0;}
+  .activity-item{padding:9px 0;border-top:1px dashed var(--border);}
+  .activity-item:first-child{border-top:none;}
+  .monogram{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
+
+  /* App shell: sidebar + topbar ------------------------------------- */
+  .shell{display:flex;height:100%;min-height:0;}
+  .sidebar{width:222px;flex-shrink:0;height:100%;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .15s ease;overflow:hidden;}
+  .sidebar.collapsed{width:68px;}
+  .sidebar-brand{display:flex;align-items:center;gap:10px;padding:16px 14px 12px 14px;}
+  .sidebar-brand .brand-text{font-size:13px;font-weight:600;line-height:1.35;white-space:nowrap;}
+  .sidebar-brand .brand-text span{display:block;font-size:10px;font-weight:400;color:var(--ink-muted);}
+  .sidebar.collapsed .brand-text{display:none;}
+  .sidebar-toggle{margin:0 10px 10px 10px;border:1px solid var(--border);background:#fff;border-radius:8px;padding:7px;cursor:pointer;color:var(--ink-muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .sidebar-nav{flex:1;min-height:0;overflow-y:auto;padding:2px 10px;display:flex;flex-direction:column;gap:2px;}
+  .side-group-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);padding:14px 10px 4px 10px;}
+  .side-group-label:first-child{padding-top:4px;}
+  .sidebar.collapsed .side-group-label{display:none;}
+  .sidebar-footer{padding:10px;border-top:1px solid var(--border);flex-shrink:0;}
+  .side-item{border:none;background:transparent;color:var(--ink-muted);display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;text-align:left;white-space:nowrap;width:100%;}
+  .side-item:hover{background:var(--bg);}
+  .side-item.active{background:var(--ink);color:#fff;}
+  .side-item .icon{flex-shrink:0;}
+  .side-item .label{overflow:hidden;text-overflow:ellipsis;}
+  .sidebar.collapsed .side-item{justify-content:center;padding:9px;}
+  .sidebar.collapsed .side-item .label{display:none;}
+  .main-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;}
+  .topbar{flex-shrink:0;display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);}
+  .topbar-brand-mobile{display:none;font-weight:700;font-size:13px;flex-shrink:0;}
+  .topbar-search{flex:1;max-width:280px;display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 10px;}
+  .topbar-search input{border:none;outline:none;background:transparent;font-size:12px;width:100%;color:var(--ink);}
+  .topbar-icon-btn{border:1px solid var(--border);background:#fff;color:var(--ink-muted);width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+  .topbar-newsale{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:0 12px;height:32px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;white-space:nowrap;}
+  .topbar-context{margin-left:auto;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+  .topbar-business{font-size:12px;font-weight:500;color:var(--ink-muted);white-space:nowrap;}
+  .topbar-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+  .placeholder-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:70px 20px;color:var(--ink-faint);text-align:center;}
+  .placeholder-screen .ph-icon{width:56px;height:56px;border-radius:14px;background:var(--surface);border:1px solid var(--border);color:var(--ink-faint);display:flex;align-items:center;justify-content:center;margin-bottom:4px;}
+  .content{overflow-y:auto;flex:1;min-height:0;}
+  .mobile-bottom-nav{display:none;}
+  .mobile-more-sheet{display:none;}
+  @media (max-width:640px){
+    .sidebar{display:none;}
+    .topbar-search, .topbar-icon-btn.scan-btn, .topbar-newsale, .topbar-business{display:none;}
+    .topbar-brand-mobile{display:block;}
+    .content{padding-bottom:78px;}
+    .mobile-bottom-nav{
+      display:flex;position:absolute;left:0;right:0;bottom:0;background:var(--surface);
+      border-top:1px solid var(--border);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px)) 4px;z-index:40;
+    }
+    .mobile-bottom-nav button{flex:1;border:none;background:transparent;color:var(--ink-faint);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:500;padding:4px 0;cursor:pointer;}
+    .mobile-bottom-nav button.active{color:var(--accent);}
+    .mobile-more-sheet.open{display:block;position:absolute;inset:0;background:rgba(27,30,26,.4);z-index:55;}
+    .mobile-more-panel{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:16px 16px 0 0;padding:8px 8px calc(14px + env(safe-area-inset-bottom,0px)) 8px;max-height:70%;overflow-y:auto;}
+    .mobile-more-handle{width:36px;height:4px;border-radius:99px;background:var(--border);margin:6px auto 10px auto;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+
+// ---------------------------------------------------------------------
+// Palette (kept in sync with the CSS custom properties above) — used
+// wherever colors must be resolved directly, e.g. inside generated SVG.
+// ---------------------------------------------------------------------
+const COLOR = {
+  ink:'#1B1E1A', inkMuted:'#767A72',
+  accent:'#1F6F55', accentSoft:'#E6F1EC',
+  warn:'#A9752B', warnSoft:'#FBF0DE',
+  danger:'#AE4230', dangerSoft:'#FBEAE5',
+};
+// A small, cohesive set of chart colors (not one-per-product) — kept
+// entirely within the accent family so nothing here is ever mistaken
+// for the semantic --warn/--danger colors used elsewhere in the UI.
+// Reused cyclically; the legend label (not the color alone) is what
+// identifies each product, per accessibility good practice.
+const CHART_COLORS = ['#1F6F55', '#4F9C82', '#7FB8A3', '#2E5E73', '#8B9A94'];
+const PRODUCT_COLOR = {
+  p1:CHART_COLORS[0], p2:CHART_COLORS[1], p3:CHART_COLORS[2], p4:CHART_COLORS[3], p5:CHART_COLORS[4],
+  p6:CHART_COLORS[0], p7:CHART_COLORS[1], p8:CHART_COLORS[2], p9:CHART_COLORS[3], p10:CHART_COLORS[4],
+};
+
+// ---------------------------------------------------------------------
+// Icons — minimal hand-drawn stroke set (no external icon library)
+// ---------------------------------------------------------------------
+const ICON_PATHS = {
+  search:'<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  minus:'<line x1="5" y1="12" x2="19" y2="12"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+  cart:'<circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M2 3h2l2.4 12.4a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.6L20 7H6"/>',
+  box:'<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
+  layers:'<rect x="3" y="7" width="7" height="7" rx="1"/><rect x="14" y="7" width="7" height="7" rx="1"/><rect x="8.5" y="14" width="7" height="7" rx="1"/>',
+  receipt:'<path d="M6 2h12v19l-2-1-2 1-2-1-2 1-2-1-2 1V2z"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/>',
+  alert:'<path d="M12 2 1 21h22L12 2z"/><line x1="12" y1="9" x2="12" y2="13.5"/><circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
+  check:'<circle cx="12" cy="12" r="9"/><polyline points="8.5 12.5 11 15 16 9"/>',
+  x:'<line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>',
+  printer:'<polyline points="6 9 6 3 18 3 18 9"/><rect x="4" y="9" width="16" height="8" rx="1"/><rect x="6" y="15" width="12" height="6"/>',
+  message:'<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 8.4 8.4 0 0 1-4-1L3 20l1.2-4A8.4 8.4 0 0 1 3 12 8.5 8.5 0 1 1 21 11.5z"/>',
+  rotate:'<polyline points="1 4 1 10 7 10"/><path d="M3.5 15a9 9 0 1 0 2-9.5L1 10"/>',
+  chevron:'<polyline points="9 18 15 12 9 6"/>',
+  info:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11.5"/><circle cx="12" cy="8" r="0.9" fill="currentColor" stroke="none"/>',
+  bag:'<path d="M6 8h12l1 12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L6 8z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+  users:'<circle cx="8.5" cy="8" r="3"/><path d="M2.5 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="8.5" r="2.4"/><path d="M15 14.3c2.6.5 4.5 2.7 5 5.7"/>',
+  wallet:'<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.2" fill="currentColor" stroke="none"/>',
+  trending:'<polyline points="3 17 9 11 13 15 21 6"/><polyline points="15 6 21 6 21 12"/>',
+  file:'<path d="M7 2h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><polyline points="14 2 14 7 19 7"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>',
+  settings:'<circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.4M12 18.6V21M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M3 12h2.4M18.6 12H21M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/>',
+  bell:'<path d="M6 8a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 12 6 8z"/><path d="M9.5 17a2.5 2.5 0 0 0 5 0"/>',
+  scan:'<path d="M3 7V4a1 1 0 0 1 1-1h3"/><path d="M17 3h3a1 1 0 0 1 1 1v3"/><path d="M21 17v3a1 1 0 0 1-1 1h-3"/><path d="M7 21H4a1 1 0 0 1-1-1v-3"/><line x1="4" y1="12" x2="20" y2="12"/>',
+  morehoriz:'<circle cx="5" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.3" fill="currentColor" stroke="none"/>',
+  panel:'<rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/>',
+  home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/>'
+};
+function icon(name, size){
+  size = size || 14;
+  return '<svg class="icon" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ICON_PATHS[name]+'</svg>';
+}
+
+// ---------------------------------------------------------------------
+// Seed data — demo/development placeholders only (spec Rule 1 / Rule 141).
+// Electronics/phones/accessories catalog per reviewer feedback — these
+// are development examples, not real market quotations or client data.
+// ---------------------------------------------------------------------
+function daysAgo(n){ return Date.now() - n*24*60*60*1000; }
+
+const PRODUCTS = [
+  { id:'p1',  name:'Wireless Mouse',              sku:'PRD-000001', qr:'QR-M2X91P', unit:'Piece', department:'Electronics', category:'Computer Accessories', min:4500,   rec:5200,   max:6500   },
+  { id:'p2',  name:'USB-C Hub',                   sku:'PRD-000002', qr:'QR-K7L305', unit:'Piece', department:'Electronics', category:'Computer Accessories', min:10500,  rec:12500,  max:16000  },
+  { id:'p3',  name:'Tempered Glass Screen Protector', sku:'PRD-000003', qr:'QR-D8Q114', unit:'Piece', department:'Electronics', category:'Phone Accessories', min:1800,   rec:2200,   max:3000   },
+  { id:'p4',  name:'iPhone 14',                   sku:'PRD-000004', qr:'QR-H4T823', unit:'Piece', department:'Electronics', category:'Mobile Phones',        min:850000, rec:890000, max:950000 },
+  { id:'p5',  name:'Samsung Galaxy A25',           sku:'PRD-000005', qr:'QR-B2N556', unit:'Piece', department:'Electronics', category:'Mobile Phones',        min:265000, rec:285000, max:310000 },
+  { id:'p6',  name:'Power Bank 20,000mAh',         sku:'PRD-000006', qr:'QR-W9V271', unit:'Piece', department:'Electronics', category:'Power & Charging',     min:16500,  rec:19000,  max:24000  },
+  { id:'p7',  name:'USB-C Charging Cable',         sku:'PRD-000007', qr:'QR-C6R448', unit:'Piece', department:'Electronics', category:'Power & Charging',     min:3200,   rec:3800,   max:5000   },
+  { id:'p8',  name:'Bluetooth Earbuds',            sku:'PRD-000008', qr:'QR-E1Y739', unit:'Piece', department:'Electronics', category:'Audio',                min:19500,  rec:23000,  max:28000  },
+  { id:'p9',  name:'USB-C Laptop Charger (65W)',   sku:'PRD-000009', qr:'QR-F5U862', unit:'Piece', department:'Electronics', category:'Laptop Accessories',   min:21000,  rec:25000,  max:30000  },
+  { id:'p10', name:'Aluminum Laptop Stand',        sku:'PRD-000010', qr:'QR-J3Z190', unit:'Piece', department:'Electronics', category:'Laptop Accessories',   min:13500,  rec:16000,  max:19500  },
+];
+
+function seedBatches(){
+  return [
+    // Wireless Mouse — 2 batches (older + newer) => stock 42, showcases FIFO/aging
+    { id:'b1',  productId:'p1',  batchNumber:'BATCH-000001', supplier:'Kigali Tech Distributors Ltd', qtyReceived:12, qtyRemaining:12, unitCost:4200,  receivedAt:daysAgo(11) },
+    { id:'b2',  productId:'p1',  batchNumber:'BATCH-000002', supplier:'Kigali Tech Distributors Ltd', qtyReceived:30, qtyRemaining:30, unitCost:4500,  receivedAt:daysAgo(3)  },
+    // USB-C Hub => stock 18
+    { id:'b3',  productId:'p2',  batchNumber:'BATCH-000003', supplier:'Kigali Tech Distributors Ltd', qtyReceived:18, qtyRemaining:18, unitCost:9500,  receivedAt:daysAgo(6)  },
+    // Screen Protector — 2 batches => stock 76
+    { id:'b4',  productId:'p3',  batchNumber:'BATCH-000004', supplier:'Mobile World Imports',         qtyReceived:26, qtyRemaining:26, unitCost:1200,  receivedAt:daysAgo(15) },
+    { id:'b5',  productId:'p3',  batchNumber:'BATCH-000005', supplier:'Mobile World Imports',         qtyReceived:50, qtyRemaining:50, unitCost:1400,  receivedAt:daysAgo(4)  },
+    // iPhone 14 => stock 7 (low stock)
+    { id:'b6',  productId:'p4',  batchNumber:'BATCH-000006', supplier:'Mobile World Imports',         qtyReceived:7,  qtyRemaining:7,  unitCost:780000, receivedAt:daysAgo(5)  },
+    // Samsung Galaxy A25 => stock 12 (low stock)
+    { id:'b7',  productId:'p5',  batchNumber:'BATCH-000007', supplier:'Mobile World Imports',         qtyReceived:12, qtyRemaining:12, unitCost:240000, receivedAt:daysAgo(8)  },
+    // Power Bank => stock 31
+    { id:'b8',  productId:'p6',  batchNumber:'BATCH-000008', supplier:'Mobile World Imports',         qtyReceived:31, qtyRemaining:31, unitCost:14000, receivedAt:daysAgo(10) },
+    // USB-C Charging Cable — 2 batches => stock 64
+    { id:'b9',  productId:'p7',  batchNumber:'BATCH-000009', supplier:'Mobile World Imports',         qtyReceived:24, qtyRemaining:24, unitCost:2600,  receivedAt:daysAgo(18) },
+    { id:'b10', productId:'p7',  batchNumber:'BATCH-000010', supplier:'Mobile World Imports',         qtyReceived:40, qtyRemaining:40, unitCost:2800,  receivedAt:daysAgo(6)  },
+    // Bluetooth Earbuds => stock 9 (low stock)
+    { id:'b11', productId:'p8',  batchNumber:'BATCH-000011', supplier:'Kigali Tech Distributors Ltd', qtyReceived:9,  qtyRemaining:9,  unitCost:16000, receivedAt:daysAgo(7)  },
+    // USB-C Laptop Charger (65W) => stock 14 (low stock, oldest batch — "Critical" aging)
+    { id:'b12', productId:'p9',  batchNumber:'BATCH-000012', supplier:'Kigali Tech Distributors Ltd', qtyReceived:14, qtyRemaining:14, unitCost:18000, receivedAt:daysAgo(20) },
+    // Aluminum Laptop Stand => stock 22
+    { id:'b13', productId:'p10', batchNumber:'BATCH-000013', supplier:'Kigali Tech Distributors Ltd', qtyReceived:22, qtyRemaining:22, unitCost:11000, receivedAt:daysAgo(2)  },
+  ];
+}
+
+// One purchase record per seed batch (Purchase → Receive → Batch is the
+// same flow the real backend uses — see FINAL MASTER PROMPT §19/§127).
+// All seed purchases are already RECEIVED, since they're what produced
+// the opening batches above. New purchases created in this demo start
+// as DRAFT and only become a batch (and affect stock) once "Received".
+function seedPurchases(batches){
+  return batches.map((b, i)=>({
+    id:'pu'+(i+1),
+    purchaseNumber:'PUR-'+String(i+1).padStart(6,'0'),
+    supplierName:b.supplier,
+    productId:b.productId,
+    quantity:b.qtyReceived,
+    unitCost:b.unitCost,
+    purchaseDate:b.receivedAt,
+    status:'RECEIVED',
+    receivedAt:b.receivedAt,
+    batchId:b.id,
+  }));
+}
+
+function seedCustomers(){
+  return [
+    { id:'c1', name:'Jean Claude Habimana', phone:'+250 788 123 456', createdAt:daysAgo(40) },
+    { id:'c2', name:'Aline Uwase',          phone:'+250 788 234 567', createdAt:daysAgo(25) },
+    { id:'c3', name:'Eric Niyonzima',       phone:'+250 788 345 678', createdAt:daysAgo(15) },
+    { id:'c4', name:'Grace Mukamana',       phone:'+250 788 456 789', createdAt:daysAgo(8)  },
+    { id:'c5', name:'Patrick Bizimana',     phone:'+250 788 567 890', createdAt:daysAgo(3)  },
+  ];
+}
+
+function seedExpenses(){
+  return [
+    { id:'e1', category:'Rent',       description:'Shop rent — August',            amount:180000, date:daysAgo(20), paymentMethod:'Bank' },
+    { id:'e2', category:'Packaging',  description:'Branded bags & boxes',          amount:15000,  date:daysAgo(12), paymentMethod:'Mobile Money' },
+    { id:'e3', category:'Transport',  description:'Delivery — Kimironko order',    amount:8000,   date:daysAgo(6),  paymentMethod:'Cash' },
+    { id:'e4', category:'Utilities',  description:'Electricity (REG)',             amount:22000,  date:daysAgo(4),  paymentMethod:'Bank' },
+    { id:'e5', category:'Marketing',  description:'Instagram promoted post',       amount:10000,  date:daysAgo(2),  paymentMethod:'Mobile Money' },
+  ];
+}
+const EXPENSE_CATEGORIES = ['Rent','Transport','Packaging','Utilities','Salaries','Marketing','Other'];
+// International-standard-style retail categories (aligned with the
+// Google Product Taxonomy's naming for these product types) — used as
+// the fixed picklist so new products stay consistent with the catalog,
+// rather than free-text categories drifting over time.
+const STANDARD_CATEGORIES = ['Mobile Phones','Phone Accessories','Computer Accessories','Laptop Accessories','Power & Charging','Audio'];
+const DEFAULT_LOW_STOCK_THRESHOLD = 15;
+
+// Illustrative last-7-days trend, shown only on the Dashboard so the
+// charts have something to draw on first load. Clearly separate from the
+// live POS mechanics (FIFO batches, stock, receipts), which are fully
+// real and reset independently via "Reset demo". Figures are development
+// examples for an electronics/phone/accessories shop, not real revenue.
+const HISTORY = {
+  days: [
+    { n:7, revenue:620000, cogs:395000 },
+    { n:6, revenue:745000, cogs:470000 },
+    { n:5, revenue:512000, cogs:328000 },
+    { n:4, revenue:890000, cogs:560000 },
+    { n:3, revenue:668000, cogs:425000 },
+    { n:2, revenue:934000, cogs:592000 },
+    { n:1, revenue:811500, cogs:514700 },
+  ],
+  lastWeekRevenue: 4575000,
+  productStats: {
+    p1: { units:60,  revenue:312000  },
+    p2: { units:39,  revenue:487500  },
+    p3: { units:110, revenue:242000  },
+    p4: { units:2,   revenue:1780000 },
+    p5: { units:4,   revenue:1140000 },
+    p6: { units:25,  revenue:475000  },
+    p7: { units:70,  revenue:266000  },
+    p8: { units:8,   revenue:184000  },
+    p9: { units:6,   revenue:150000  },
+    p10:{ units:9,   revenue:144000  },
+  },
+  recentActivity: [
+    { productId:'p4', qty:1, amount:890000, hoursAgo:3  },
+    { productId:'p7', qty:4, amount:15200,  hoursAgo:5  },
+    { productId:'p1', qty:2, amount:10400,  hoursAgo:9  },
+    { productId:'p6', qty:1, amount:19000,  hoursAgo:14 },
+    { productId:'p3', qty:6, amount:13200,  hoursAgo:27 },
+    { productId:'p5', qty:1, amount:285000, hoursAgo:33 },
+  ],
+};
+
+// ---------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------
+const _seedBatches = seedBatches();
+const state = {
+  products: PRODUCTS.slice(),
+  batches: _seedBatches,
+  purchases: seedPurchases(_seedBatches),
+  customers: seedCustomers(),
+  expenses: seedExpenses(),
+  sales: [],
+  cart: [], // {productId, qty, unitPrice}
+  tab: 'dashboard',
+  search: '',
+  toast: null,
+  customerName: 'Walk-in Customer',
+  paymentMethod: 'Cash',
+  cashReceived: '',
+  receipt: null,
+  viewingReceipt: false,
+  showBanner: true,
+  processing: false,
+  saleCounter: 125,
+  purchaseCounter: 14,
+  batchCounter: 14,
+  customerCounter: 6,
+  expenseCounter: 6,
+  sidebarCollapsed: false,
+  mobileMoreOpen: false,
+  globalSearch: '',
+  stockFilter: 'all',
+  productCounter: 11,
+  showAddProduct: false,
+  pfName: '', pfCategory: 'Mobile Phones', pfUnit: 'Piece', pfMin: '', pfRec: '', pfMax: '',
+  businessName: 'XR',
+  lowStockThreshold: DEFAULT_LOW_STOCK_THRESHOLD,
+  // New Purchase form
+  npProductId: '',
+  npSupplier: '',
+  npQty: '',
+  npCost: '',
+  // New Customer form
+  ncName: '',
+  ncPhone: '',
+  // New Expense form
+  neCategory: 'Transport',
+  neDescription: '',
+  neAmount: '',
+};
+let toastTimer = null;
+
+// ---------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------
+function fmt(n){ return Math.round(n||0).toLocaleString('en-US'); }
+function fmtDate(ts){
+  return new Date(ts).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function fmtDateOnly(ts){
+  return new Date(ts).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function initials(name){
+  const parts = (name||'').trim().split(/\s+/).filter(Boolean);
+  if(parts.length===0) return 'XR';
+  return parts.map(w=>w[0]).join('').slice(0,3).toUpperCase();
+}
+function pastDayLabel(n){ return new Date(Date.now()-n*86400000).toLocaleDateString('en-GB',{ weekday:'short' }); }
+function relTime(ts){
+  const mins = Math.floor((Date.now()-ts)/60000);
+  if(mins<1) return 'Just now';
+  if(mins<60) return mins+'m ago';
+  const hrs = Math.floor(mins/60);
+  if(hrs<24) return hrs+'h ago';
+  const days = Math.floor(hrs/24);
+  if(days===1) return 'Yesterday';
+  return days+'d ago';
+}
+function pctChange(curr, prev){ if(!prev) return 0; return (curr-prev)/prev*100; }
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, function(m){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+  });
+}
+function agingBucket(days){
+  if(days<=3) return { label:'Fresh', fg:'var(--accent)', bg:'var(--accent-soft)' };
+  if(days<=7) return { label:'Aging', fg:'var(--warn)', bg:'var(--warn-soft)' };
+  if(days<=14) return { label:'Old', fg:'var(--warn)', bg:'var(--warn-soft)' };
+  return { label:'Critical', fg:'var(--danger)', bg:'var(--danger-soft)' };
+}
+function stockFor(productId){
+  return state.batches.filter(b=>b.productId===productId).reduce((s,b)=>s+b.qtyRemaining,0);
+}
+function stockValue(){
+  return state.batches.reduce((s,b)=>s+b.qtyRemaining*b.unitCost,0);
+}
+function showToast(type, message){
+  state.toast = { type, message };
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ state.toast=null; render(); }, 3200);
+  render();
+}
+
+// ---------------------------------------------------------------------
+// Mini chart renderers — plain SVG, no external chart library
+// ---------------------------------------------------------------------
+function lineAreaChart(points, height){
+  const w = 640, h = height||150, pad = 10;
+  const values = points.map(p=>p.value);
+  const max = Math.max.apply(null, values.concat([1]));
+  const min = Math.min.apply(null, values.concat([0]));
+  const range = (max-min) || 1;
+  const stepX = (w-pad*2)/(points.length-1);
+  const xy = points.map((p,i)=>[ pad+i*stepX, h-pad-((p.value-min)/range)*(h-pad*2) ]);
+  const line = xy.map((pt,i)=>(i===0?'M':'L')+pt[0].toFixed(1)+','+pt[1].toFixed(1)).join(' ');
+  const area = line+' L'+xy[xy.length-1][0].toFixed(1)+','+(h-pad)+' L'+xy[0][0].toFixed(1)+','+(h-pad)+' Z';
+  let dots = '';
+  xy.forEach((pt,i)=>{
+    const last = i===xy.length-1;
+    dots += '<circle cx="'+pt[0].toFixed(1)+'" cy="'+pt[1].toFixed(1)+'" r="'+(last?4.5:2.5)+'" fill="'+(last?COLOR.accent:'#fff')+'" stroke="'+COLOR.accent+'" stroke-width="2"/>';
+  });
+  const svg = '<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" preserveAspectRatio="none">'+
+    '<path d="'+area+'" fill="'+COLOR.accentSoft+'" stroke="none"/>'+
+    '<path d="'+line+'" fill="none" stroke="'+COLOR.accent+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+
+    dots+'</svg>';
+  const labels = '<div class="row between xs faint" style="margin-top:6px;">'+points.map(p=>'<span>'+esc(p.label)+'</span>').join('')+'</div>';
+  return svg+labels;
+}
+function donutChart(segments, size){
+  size = size || 132;
+  const r = size/2-15, cx=size/2, cy=size/2, circumference=2*Math.PI*r;
+  const total = segments.reduce((s,seg)=>s+seg.value,0) || 1;
+  let offset = 0, circles = '';
+  segments.forEach(seg=>{
+    const segLen = seg.value/total*circumference;
+    circles += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+seg.color+'" stroke-width="15" '+
+      'stroke-dasharray="'+segLen.toFixed(1)+' '+(circumference-segLen).toFixed(1)+'" stroke-dashoffset="'+(-offset).toFixed(1)+'" '+
+      'transform="rotate(-90 '+cx+' '+cy+')"/>';
+    offset += segLen;
+  });
+  const svg = '<svg viewBox="0 0 '+size+' '+size+'" width="'+size+'" height="'+size+'">'+circles+'</svg>';
+  const legend = segments.map(seg=>{
+    const pct = Math.round(seg.value/total*100);
+    return '<div class="row between xs" style="margin-bottom:7px;"><span class="row gap2"><span style="width:8px;height:8px;border-radius:50%;background:'+seg.color+';display:inline-block;"></span>'+esc(seg.label)+'</span><span class="mono muted">'+pct+'%</span></div>';
+  }).join('');
+  return '<div class="row wrap" style="align-items:center;gap:18px;"><div>'+svg+'</div><div class="grow" style="min-width:120px;">'+legend+'</div></div>';
+}
+function trendPill(pct){
+  const up = pct>=0;
+  return '<span class="badge" style="background:'+(up?'var(--accent-soft)':'var(--danger-soft)')+';color:'+(up?'var(--accent)':'var(--danger)')+';">'+(up?'\u25B2':'\u25BC')+' '+Math.abs(pct).toFixed(1)+'%</span>';
+}
+
+// ---------------------------------------------------------------------
+// Cart logic
+// ---------------------------------------------------------------------
+function adjustCart(productId, delta){
+  const product = state.products.find(p=>p.id===productId);
+  const available = stockFor(productId);
+  const item = state.cart.find(i=>i.productId===productId);
+  const currentQty = item ? item.qty : 0;
+  if(delta>0 && currentQty>=available){ showToast('error','Only '+available+' '+product.unit.toLowerCase()+' available.'); return; }
+  const newQty = currentQty+delta;
+  if(newQty<=0){ state.cart = state.cart.filter(i=>i.productId!==productId); render(); return; }
+  const clamped = Math.min(newQty, available);
+  if(item) item.qty = clamped;
+  else state.cart.push({ productId, qty:clamped, unitPrice:product.rec });
+  render();
+}
+function removeFromCart(productId){
+  state.cart = state.cart.filter(i=>i.productId!==productId);
+  render();
+}
+function setCartPrice(productId, value){
+  const item = state.cart.find(i=>i.productId===productId);
+  if(!item) return;
+  item.unitPrice = parseFloat(value) || 0;
+  render();
+}
+function computeCartLines(){
+  return state.cart.map(item=>{
+    const product = state.products.find(p=>p.id===item.productId);
+    const available = stockFor(item.productId);
+    let priceError = null;
+    if(item.unitPrice < product.min) priceError = 'Below minimum RWF '+fmt(product.min);
+    else if(item.unitPrice > product.max) priceError = 'Above maximum RWF '+fmt(product.max);
+    const stockError = item.qty>available ? ('Only '+available+' available') : null;
+    return Object.assign({}, item, { product, available, priceError, stockError, lineTotal:item.qty*item.unitPrice });
+  });
+}
+
+function completeSale(){
+  if(state.processing) return;
+  const cartLines = computeCartLines();
+  if(cartLines.length===0){ showToast('error','Cart is empty.'); return; }
+  const hasErrors = cartLines.some(l=>l.priceError||l.stockError);
+  if(hasErrors){ showToast('error','Fix price or stock issues before completing the sale.'); return; }
+  const subtotal = cartLines.reduce((s,l)=>s+l.lineTotal,0);
+  const total = subtotal;
+  const cashNum = parseFloat(state.cashReceived)||0;
+  if(state.paymentMethod==='Cash' && cashNum<total){ showToast('error','Cash received is less than the total due.'); return; }
+  state.processing = true;
+
+  const working = state.batches.map(b=>Object.assign({}, b));
+  const saleItems = [];
+  for(const line of cartLines){
+    let remaining = line.qty;
+    const allocations = [];
+    const avail = working.filter(b=>b.productId===line.productId && b.qtyRemaining>0).sort((a,b)=>a.receivedAt-b.receivedAt);
+    for(const b of avail){
+      if(remaining<=0) break;
+      const take = Math.min(b.qtyRemaining, remaining);
+      if(take>0){ allocations.push({ batchId:b.id, batchNumber:b.batchNumber, qty:take, unitCost:b.unitCost }); b.qtyRemaining -= take; remaining -= take; }
+    }
+    if(remaining>0){ state.processing=false; showToast('error','Insufficient stock for '+line.product.name+'.'); return; }
+    const cost = allocations.reduce((s,a)=>s+a.qty*a.unitCost,0);
+    saleItems.push(Object.assign({}, line, { allocations, cost, profit:line.lineTotal-cost }));
+  }
+
+  const cogs = saleItems.reduce((s,i)=>s+i.cost,0);
+  const profit = total - cogs;
+  const saleNumber = 'SAL-'+String(state.saleCounter).padStart(6,'0');
+  state.saleCounter += 1;
+  const record = {
+    id:saleNumber, saleNumber, items:saleItems, subtotal, total, cogs, profit,
+    paymentMethod:state.paymentMethod, cashReceived: state.paymentMethod==='Cash'?cashNum:null,
+    change: state.paymentMethod==='Cash' ? (cashNum-total) : null,
+    customerName:state.customerName||'Walk-in Customer', timestamp:Date.now(),
+    businessName:state.businessName,
+  };
+
+  state.batches = working;
+  state.sales.unshift(record);
+  state.receipt = record;
+  state.viewingReceipt = true;
+  state.cart = [];
+  state.cashReceived = '';
+  state.processing = false;
+  render();
+  showToast('success','Sale '+saleNumber+' completed.');
+}
+
+function resetDemo(){
+  const freshBatches = seedBatches();
+  state.batches = freshBatches;
+  state.purchases = seedPurchases(freshBatches);
+  state.customers = seedCustomers();
+  state.expenses = seedExpenses();
+  state.sales = [];
+  state.cart = [];
+  state.receipt = null;
+  state.viewingReceipt = false;
+  state.cashReceived = '';
+  state.saleCounter = 125;
+  state.purchaseCounter = 14;
+  state.batchCounter = 14;
+  state.customerCounter = 6;
+  state.expenseCounter = 6;
+  state.businessName = 'XR';
+  state.lowStockThreshold = DEFAULT_LOW_STOCK_THRESHOLD;
+  state.stockFilter = 'all';
+  state.npProductId = ''; state.npSupplier = ''; state.npQty = ''; state.npCost = '';
+  state.ncName = ''; state.ncPhone = '';
+  state.neCategory = 'Transport'; state.neDescription = ''; state.neAmount = '';
+  state.products = PRODUCTS.slice();
+  state.productCounter = 11;
+  state.showAddProduct = false;
+  state.pfName = ''; state.pfCategory = 'Mobile Phones'; state.pfUnit = 'Piece'; state.pfMin = ''; state.pfRec = ''; state.pfMax = '';
+  render();
+  showToast('success','Demo data reset to opening state.');
+}
+
+// ---------------------------------------------------------------------
+// Purchases — Purchase (DRAFT) → Receive → Batch → Inventory, same
+// sequence as the real backend (FINAL MASTER PROMPT §19).
+// ---------------------------------------------------------------------
+function createPurchase(){
+  const product = state.products.find(p=>p.id===state.npProductId);
+  const qty = parseInt(state.npQty,10);
+  const cost = parseFloat(state.npCost);
+  if(!product){ showToast('error','Choose a product for the purchase.'); return; }
+  if(!state.npSupplier.trim()){ showToast('error','Enter a supplier name.'); return; }
+  if(!qty || qty<=0){ showToast('error','Enter a quantity greater than 0.'); return; }
+  if(!cost || cost<=0){ showToast('error','Enter a unit cost greater than 0.'); return; }
+  const purchaseNumber = 'PUR-'+String(state.purchaseCounter).padStart(6,'0');
+  state.purchaseCounter += 1;
+  state.purchases.unshift({
+    id:'pu_'+purchaseNumber, purchaseNumber, supplierName:state.npSupplier.trim(),
+    productId:product.id, quantity:qty, unitCost:cost, purchaseDate:Date.now(),
+    status:'DRAFT', receivedAt:null, batchId:null,
+  });
+  state.npProductId=''; state.npSupplier=''; state.npQty=''; state.npCost='';
+  render();
+  showToast('success','Draft purchase '+purchaseNumber+' created.');
+}
+
+function receivePurchase(purchaseId){
+  const purchase = state.purchases.find(p=>p.id===purchaseId);
+  if(!purchase){ return; }
+  if(purchase.status!=='DRAFT'){ showToast('error','Purchase already received.'); return; }
+  const batchNumber = 'BATCH-'+String(state.batchCounter).padStart(6,'0');
+  state.batchCounter += 1;
+  const batch = {
+    id:'b_'+batchNumber, productId:purchase.productId, batchNumber,
+    supplier:purchase.supplierName, qtyReceived:purchase.quantity, qtyRemaining:purchase.quantity,
+    unitCost:purchase.unitCost, receivedAt:Date.now(),
+  };
+  state.batches.push(batch);
+  purchase.status = 'RECEIVED';
+  purchase.receivedAt = batch.receivedAt;
+  purchase.batchId = batch.id;
+  render();
+  showToast('success','Purchase '+purchase.purchaseNumber+' received — stock updated.');
+}
+
+// ---------------------------------------------------------------------
+// Customers
+// ---------------------------------------------------------------------
+function addCustomer(){
+  if(!state.ncName.trim()){ showToast('error','Enter a customer name.'); return; }
+  const id = 'c'+state.customerCounter;
+  state.customerCounter += 1;
+  state.customers.unshift({ id, name:state.ncName.trim(), phone:state.ncPhone.trim(), createdAt:Date.now() });
+  state.ncName=''; state.ncPhone='';
+  render();
+  showToast('success','Customer added.');
+}
+
+// ---------------------------------------------------------------------
+// Expenses
+// ---------------------------------------------------------------------
+function addExpense(){
+  const amount = parseFloat(state.neAmount);
+  if(!state.neDescription.trim()){ showToast('error','Enter a short description.'); return; }
+  if(!amount || amount<=0){ showToast('error','Enter an amount greater than 0.'); return; }
+  const id = 'e'+state.expenseCounter;
+  state.expenseCounter += 1;
+  state.expenses.unshift({ id, category:state.neCategory, description:state.neDescription.trim(), amount, date:Date.now(), paymentMethod:'Cash' });
+  state.neDescription=''; state.neAmount='';
+  render();
+  showToast('success','Expense recorded.');
+}
+
+// ---------------------------------------------------------------------
+// Products — a brand-new product starts with zero stock (no batches
+// exist for it yet), same as the real backend: stock only ever comes
+// from a received purchase, never from a manual number typed here.
+// ---------------------------------------------------------------------
+function randomQr(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = 'QR-';
+  for(let i=0;i<6;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function createProduct(){
+  const name = state.pfName.trim();
+  const min = parseFloat(state.pfMin), rec = parseFloat(state.pfRec), max = parseFloat(state.pfMax);
+  if(!name){ showToast('error','Enter a product name.'); return; }
+  if(!min || !rec || !max){ showToast('error','Enter minimum, recommended and maximum price.'); return; }
+  if(!(min<=rec && rec<=max)){ showToast('error','Pricing must satisfy minimum ≤ recommended ≤ maximum.'); return; }
+  const id = 'p'+state.productCounter;
+  const sku = 'PRD-'+String(state.productCounter).padStart(6,'0');
+  state.products.push({ id, name, sku, qr:randomQr(), unit:state.pfUnit, department:'Electronics', category:state.pfCategory, min, rec, max });
+  PRODUCT_COLOR[id] = CHART_COLORS[(state.productCounter-1) % CHART_COLORS.length];
+  state.productCounter += 1;
+  state.pfName=''; state.pfMin=''; state.pfRec=''; state.pfMax='';
+  state.showAddProduct = false;
+  render();
+  showToast('success', name+' added — 0 stock until a purchase is received.');
+}
+
+// ---------------------------------------------------------------------
+// Render
+// ---------------------------------------------------------------------
+const TABS = [
+  { id:'dashboard', label:'Dashboard', icon:'grid', built:true, group:'Overview' },
+  { id:'pos', label:'POS', icon:'cart', built:true, group:'Sales' },
+  { id:'sales', label:'Sales', icon:'receipt', built:true, group:'Sales' },
+  { id:'customers', label:'Customers', icon:'users', built:true, group:'Sales' },
+  { id:'products', label:'Products', icon:'box', built:true, group:'Inventory' },
+  { id:'purchases', label:'Purchases', icon:'bag', built:true, group:'Inventory' },
+  { id:'inventory', label:'Inventory', icon:'layers', built:true, group:'Inventory' },
+  { id:'expenses', label:'Expenses', icon:'wallet', built:true, group:'Finance' },
+  { id:'analytics', label:'Analytics', icon:'trending', built:true, group:'Finance' },
+  { id:'documents', label:'Documents', icon:'file', built:true, group:'Finance' },
+];
+const SETTINGS_TAB = { id:'settings', label:'Settings', icon:'settings', built:true };
+const ALL_TABS = TABS.concat([SETTINGS_TAB]);
+
+// Mobile bottom nav: Home / Scan / Sales / Inventory / More
+const MOBILE_PRIMARY = [
+  { id:'dashboard', label:'Home', icon:'home' },
+  { id:'pos', label:'Scan', icon:'scan' },
+  { id:'sales', label:'Sales', icon:'receipt' },
+  { id:'inventory', label:'Inventory', icon:'layers' },
+];
+// Contents of the mobile "More" sheet, per spec's exact breakdown
+const MOBILE_MORE_TABS = [
+  { id:'products', label:'Products', icon:'box' },
+  { id:'purchases', label:'Purchases', icon:'bag' },
+  { id:'customers', label:'Customers', icon:'users' },
+  { id:'expenses', label:'Expenses', icon:'wallet' },
+  { id:'analytics', label:'Analytics', icon:'trending' },
+  { id:'documents', label:'Documents', icon:'file' },
+  { id:'settings', label:'Settings', icon:'settings' },
+];
+
+function renderPlaceholder(tab){
+  return '<div class="placeholder-screen">'+
+    '<div class="ph-icon">'+icon(tab.icon,24)+'</div>'+
+    '<div class="sm semibold" style="color:var(--ink);margin-top:2px;">'+esc(tab.label)+'</div>'+
+    '<div class="xs" style="max-width:280px;margin-top:6px;">This section isn\u2019t built in this demo yet \u2014 it\u2019s part of a later development stage, not a missing feature.</div>'+
+  '</div>';
+}
+
+function statCard(label, value, sub, tone, trend){
+  return '<div class="card">'+
+    '<div class="row between"><span class="xs muted">'+esc(label)+'</span>'+(trend||'')+'</div>'+
+    '<div class="mono semibold lg" style="margin-top:6px;'+(tone?'color:'+tone+';':'')+'">'+value+'</div>'+
+    (sub?'<div class="xs faint" style="margin-top:4px;">'+sub+'</div>':'')+
+  '</div>';
+}
+
+// Single source of truth for Revenue/COGS/Gross Profit, reused by
+// Dashboard, Expenses and Analytics so the three screens can never show
+// contradicting numbers for the same underlying sales (FINAL MASTER
+// PROMPT §6 "Source of Truth Map" / §27 "Analytics Reconciliation").
+function computeFinanceSummary(){
+  const liveRevenue = state.sales.reduce((s,sa)=>s+sa.total,0);
+  const liveCOGS = state.sales.reduce((s,sa)=>s+sa.cogs,0);
+  const histRevenue = HISTORY.days.reduce((s,d)=>s+d.revenue,0);
+  const histCOGS = HISTORY.days.reduce((s,d)=>s+d.cogs,0);
+  const revenue = histRevenue+liveRevenue;
+  const cogs = histCOGS+liveCOGS;
+  const grossProfit = revenue-cogs;
+  const margin = revenue>0 ? (grossProfit/revenue*100) : 0;
+  const operatingExpenses = state.expenses.reduce((s,e)=>s+e.amount,0);
+  const netProfit = grossProfit-operatingExpenses;
+  return { liveRevenue, revenue, cogs, grossProfit, margin, operatingExpenses, netProfit };
+}
+
+// Single source of truth for per-product units/revenue (seed history +
+// live session sales merged), reused by Dashboard and Analytics.
+function computeProductStats(){
+  const liveByProduct = {};
+  state.sales.forEach(sa=>sa.items.forEach(i=>{
+    if(!liveByProduct[i.productId]) liveByProduct[i.productId] = { units:0, revenue:0 };
+    liveByProduct[i.productId].units += i.qty;
+    liveByProduct[i.productId].revenue += i.lineTotal;
+  }));
+  return state.products.map(p=>{
+    const seed = HISTORY.productStats[p.id] || { units:0, revenue:0 };
+    const live = liveByProduct[p.id] || { units:0, revenue:0 };
+    return { product:p, units:seed.units+live.units, revenue:seed.revenue+live.revenue, stock:stockFor(p.id) };
+  });
+}
+
+function renderDashboard(){
+  const fin = computeFinanceSummary();
+  const revTrend = pctChange(fin.revenue, HISTORY.lastWeekRevenue);
+  const lastWeekProfit = HISTORY.lastWeekRevenue*0.385;
+  const profitTrend = pctChange(fin.grossProfit, lastWeekProfit);
+
+  const chartPoints = HISTORY.days.map(d=>({ label:pastDayLabel(d.n), value:d.revenue })).concat([{ label:'Today', value:fin.liveRevenue }]);
+
+  const merged = computeProductStats().sort((a,b)=>b.revenue-a.revenue);
+  const maxRev = Math.max(1, ...merged.map(m=>m.revenue));
+  const donutSegments = merged.map(m=>({ label:m.product.name, value:m.revenue, color:PRODUCT_COLOR[m.product.id] }));
+
+  const lowStock = state.products.filter(p=>stockFor(p.id)<state.lowStockThreshold);
+
+  const activity = HISTORY.recentActivity.map(a=>({
+    product: state.products.find(p=>p.id===a.productId), qty:a.qty, amount:a.amount, ts: Date.now()-a.hoursAgo*3600000
+  })).concat(state.sales.flatMap(sa=>sa.items.map(it=>({ product:it.product, qty:it.qty, amount:it.lineTotal, ts:sa.timestamp }))))
+    .sort((a,b)=>b.ts-a.ts).slice(0,6);
+
+  let html = '<div class="grid" style="grid-template-columns:1.3fr 1fr 1fr;">';
+  html += '<div class="card" style="display:flex;flex-direction:column;justify-content:center;">'+
+    '<div class="row between"><span class="hero-label">Revenue</span>'+trendPill(revTrend)+'</div>'+
+    '<div class="hero-value" style="margin-top:4px;">RWF '+fmt(fin.revenue)+'</div>'+
+    '<div class="xs faint" style="margin-top:4px;">'+(state.sales.length)+' live transaction'+(state.sales.length===1?'':'s')+' today</div>'+
+  '</div>';
+  html += statCard('Gross profit', 'RWF '+fmt(fin.grossProfit), fin.margin.toFixed(1)+'% margin', 'var(--accent)', trendPill(profitTrend));
+  html += statCard('COGS', 'RWF '+fmt(fin.cogs), 'FIFO batch cost');
+  html += '</div>';
+  html += '<div class="grid grid-stats" style="margin-top:12px;">';
+  html += statCard('Stock cost value', 'RWF '+fmt(stockValue()), 'Across all batches');
+  html += statCard('Net profit', 'RWF '+fmt(fin.netProfit), 'After RWF '+fmt(fin.operatingExpenses)+' expenses', fin.netProfit>=0?'var(--accent)':'var(--danger)');
+  html += '</div>';
+
+  html += '<div class="grid" style="grid-template-columns:minmax(0,1.6fr) minmax(240px,1fr);margin-top:12px;">';
+  html += '<div class="card"><div class="row between" style="margin-bottom:4px;"><span class="xs semibold">Revenue — last 7 days + today</span></div>'+
+    lineAreaChart(chartPoints, 140)+
+    '<div class="xs faint" style="margin-top:8px;">Last 7 days are illustrative seed history; "Today" reflects sales completed in this demo session.</div>'+
+  '</div>';
+  html += '<div class="card"><div class="xs semibold" style="margin-bottom:10px;">Revenue by product</div>'+donutChart(donutSegments)+'</div>';
+  html += '</div>';
+
+  html += '<div class="grid grid-2" style="margin-top:12px;">';
+  html += '<div class="card"><div class="xs semibold" style="margin-bottom:12px;">Top products</div>';
+  merged.forEach(m=>{
+    html += '<div style="margin-bottom:10px;">'+
+      '<div class="row between xs" style="margin-bottom:4px;">'+
+        '<span class="row gap2 medium"><span style="width:8px;height:8px;border-radius:50%;background:'+PRODUCT_COLOR[m.product.id]+';display:inline-block;"></span>'+esc(m.product.name)+'</span>'+
+        '<span class="mono">'+m.units+' '+m.product.unit.toLowerCase()+' · RWF '+fmt(m.revenue)+'</span>'+
+      '</div>'+
+      '<span class="bar-track"><span class="bar-fill" style="display:block;width:'+(m.revenue/maxRev*100)+'%;background:'+PRODUCT_COLOR[m.product.id]+';"></span></span>'+
+    '</div>';
+  });
+  html += '</div>';
+
+  html += '<div class="card"><div class="xs semibold" style="margin-bottom:12px;">Needs attention</div>';
+  if(lowStock.length===0){
+    html += '<div class="empty">No low-stock signals right now.</div>';
+  } else {
+    lowStock.forEach(p=>{
+      const s = stockFor(p.id);
+      html += '<div class="row between" style="background:var(--danger-soft);border-radius:8px;padding:8px 10px;margin-bottom:6px;">'+
+        '<span class="row gap2 xs medium">'+icon('alert',13)+' '+esc(p.name)+'</span>'+
+        '<span class="mono xs danger">'+s+' left · reorder below '+state.lowStockThreshold+'</span>'+
+      '</div>';
+    });
+  }
+  html += '</div></div>';
+
+  html += '<div class="card" style="margin-top:12px;"><div class="xs semibold" style="margin-bottom:4px;">Recent activity</div>';
+  activity.forEach(a=>{
+    html += '<div class="activity-item row between">'+
+      '<span class="row gap2 xs"><span class="monogram" style="width:26px;height:26px;font-size:11px;">'+esc(a.product.name.charAt(0))+'</span>'+
+      '<span>'+esc(a.product.name)+' <span class="faint">×'+a.qty+'</span></span></span>'+
+      '<span class="row gap3 xs"><span class="mono muted">RWF '+fmt(a.amount)+'</span>'+
+      '<span class="badge" style="background:var(--accent-soft);color:var(--accent);">Completed</span>'+
+      '<span class="faint" style="width:64px;text-align:right;">'+relTime(a.ts)+'</span></span>'+
+    '</div>';
+  });
+  html += '</div>';
+
+  return html;
+}
+
+function renderSearchBar(placeholder){
+  return '<div class="row gap2 card" style="padding:9px 12px;">'+icon('search',15)+
+    '<input class="grow" data-bind="search" placeholder="'+esc(placeholder)+'" value="'+esc(state.search)+'" style="border:none;outline:none;font-size:13px;background:transparent;"/>'+
+  '</div>';
+}
+
+function renderProducts(){
+  const q = state.search.toLowerCase();
+  let list = state.products.filter(p=>p.name.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q));
+  if(state.stockFilter==='low') list = list.filter(p=>{ const s=stockFor(p.id); return s>0 && s<state.lowStockThreshold; });
+  else if(state.stockFilter==='out') list = list.filter(p=>stockFor(p.id)<=0);
+  let html = renderSearchBar('Search products or SKU…');
+  html += '<div class="row between" style="margin-top:12px;">';
+  html += '<div class="chip-row">';
+  [['all','All'],['low','Low stock'],['out','Out of stock']].forEach(f=>{
+    html += '<div class="chip '+(state.stockFilter===f[0]?'active':'')+'" data-action="set-stock-filter" data-filter="'+f[0]+'">'+f[1]+'</div>';
+  });
+  html += '</div><div class="row gap3"><span class="xs faint">'+list.length+' product'+(list.length===1?'':'s')+'</span>'+
+    '<button class="btn btn-accent" data-action="toggle-add-product">'+icon('plus',12)+' Add product</button></div>';
+  html += '</div>';
+
+  if(state.showAddProduct){
+    html += '<div class="card" style="margin-top:12px;"><div class="xs semibold" style="margin-bottom:10px;">New product</div>'+
+      '<div class="row gap2 wrap" style="align-items:flex-end;">'+
+        '<div style="min-width:180px;flex:1;"><div class="xs faint" style="margin-bottom:4px;">Name</div><input class="input" data-bind="pfName" placeholder="Product name" value="'+esc(state.pfName)+'"/></div>'+
+        '<div style="min-width:160px;"><div class="xs faint" style="margin-bottom:4px;">Category</div><select class="input" data-bind="pfCategory">'+
+          STANDARD_CATEGORIES.map(c=>'<option value="'+c+'" '+(state.pfCategory===c?'selected':'')+'>'+c+'</option>').join('')+'</select></div>'+
+        '<div style="width:110px;"><div class="xs faint" style="margin-bottom:4px;">Unit</div><select class="input" data-bind="pfUnit">'+
+          ['Piece','Pair','Set','Box'].map(u=>'<option value="'+u+'" '+(state.pfUnit===u?'selected':'')+'>'+u+'</option>').join('')+'</select></div>'+
+      '</div>'+
+      '<div class="row gap2 wrap" style="align-items:flex-end;margin-top:10px;">'+
+        '<div style="width:120px;"><div class="xs faint" style="margin-bottom:4px;">Min price</div><input class="input mono" data-bind="pfMin" inputmode="decimal" value="'+esc(state.pfMin)+'"/></div>'+
+        '<div style="width:120px;"><div class="xs faint" style="margin-bottom:4px;">Recommended</div><input class="input mono" data-bind="pfRec" inputmode="decimal" value="'+esc(state.pfRec)+'"/></div>'+
+        '<div style="width:120px;"><div class="xs faint" style="margin-bottom:4px;">Max price</div><input class="input mono" data-bind="pfMax" inputmode="decimal" value="'+esc(state.pfMax)+'"/></div>'+
+        '<button class="btn btn-accent" data-action="create-product">'+icon('plus',13)+' Add product</button>'+
+        '<button class="btn" data-action="toggle-add-product">Cancel</button>'+
+      '</div>'+
+      '<div class="xs faint" style="margin-top:8px;">New products start at 0 stock — receive a purchase to add inventory, same as the real backend.</div>'+
+    '</div>';
+  }
+
+  html += '<div class="grid grid-products" style="margin-top:12px;">';
+  list.forEach(p=>{
+    const stock = stockFor(p.id);
+    const low = stock<state.lowStockThreshold;
+    const out = stock<=0;
+    const dotColor = out?'var(--danger)':(low?'var(--warn)':'var(--accent)');
+    html += '<div class="card">'+
+      '<div class="row gap2" style="align-items:flex-start;">'+
+        '<div style="position:relative;flex-shrink:0;"><div class="monogram">'+esc(p.name.charAt(0))+'</div>'+
+        '<span style="position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:'+dotColor+';border:2px solid var(--surface);"></span></div>'+
+        '<div class="grow"><div class="row between"><span class="semibold sm">'+esc(p.name)+'</span>'+
+          '<span class="badge" style="background:'+(low?'var(--danger-soft)':'var(--accent-soft)')+';color:'+(low?'var(--danger)':'var(--accent)')+';">'+stock+' in stock</span></span>'+
+          '<div class="xs muted" style="margin-top:2px;">'+esc(p.category)+' · '+esc(p.unit)+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="mono xs muted row gap3" style="margin-top:10px;"><span>'+esc(p.sku)+'</span><span>'+esc(p.qr)+'</span></div>'+
+      '<div class="dashed" style="margin-top:10px;padding-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;">'+
+        '<div><div class="xs faint">Minimum</div><div class="mono sm medium">'+fmt(p.min)+'</div></div>'+
+        '<div style="background:var(--accent-soft);border-radius:6px;padding:2px 0;"><div class="xs accent">Recommended</div><div class="mono sm semibold accent">'+fmt(p.rec)+'</div></div>'+
+        '<div><div class="xs faint">Maximum</div><div class="mono sm medium">'+fmt(p.max)+'</div></div>'+
+      '</div>'+
+    '</div>';
+  });
+  html += '</div>';
+  if(list.length===0) html += '<div class="empty">No products match this filter.</div>';
+  return html;
+}
+
+function renderInventory(){
+  const totalEverStocked = state.batches.reduce((s,b)=>s+b.qtyReceived,0);
+  const totalInStock = state.batches.reduce((s,b)=>s+b.qtyRemaining,0);
+  const attentionCount = state.products.filter(p=>stockFor(p.id)<state.lowStockThreshold).length;
+
+  let html = '<div class="grid grid-stats">';
+  html += statCard('Total items stocked', fmt(totalEverStocked), 'Across all received batches');
+  html += statCard('In stock now', fmt(totalInStock), 'RWF '+fmt(stockValue())+' cost value', 'var(--accent)');
+  html += statCard('Needs attention', attentionCount, attentionCount===1?'product below reorder level':'products below reorder level', attentionCount>0?'var(--danger)':null);
+  html += '</div>';
+
+  const compByProduct = state.products.map(p=>{
+    const val = state.batches.filter(b=>b.productId===p.id).reduce((s,b)=>s+b.qtyRemaining*b.unitCost,0);
+    return { product:p, val };
+  });
+  const maxVal = Math.max(1, ...compByProduct.map(c=>c.val));
+  html += '<div class="card" style="margin-top:12px;"><div class="xs semibold" style="margin-bottom:12px;">Stock value composition</div>';
+  compByProduct.forEach(c=>{
+    html += '<div style="margin-bottom:9px;"><div class="row between xs" style="margin-bottom:4px;">'+
+      '<span class="row gap2 medium"><span style="width:8px;height:8px;border-radius:50%;background:'+PRODUCT_COLOR[c.product.id]+';display:inline-block;"></span>'+esc(c.product.name)+'</span>'+
+      '<span class="mono">RWF '+fmt(c.val)+'</span></div>'+
+      '<span class="bar-track"><span class="bar-fill" style="display:block;width:'+(c.val/maxVal*100)+'%;background:'+PRODUCT_COLOR[c.product.id]+';"></span></span></div>';
+  });
+  html += '</div>';
+
+  html += '<div class="chip-row" style="margin-top:14px;margin-bottom:2px;">';
+  [['all','All products'],['low','Low stock'],['out','Out of stock']].forEach(f=>{
+    html += '<div class="chip '+(state.stockFilter===f[0]?'active':'')+'" data-action="set-stock-filter" data-filter="'+f[0]+'">'+f[1]+'</div>';
+  });
+  html += '</div>';
+
+  let productsToShow = state.products;
+  if(state.stockFilter==='low') productsToShow = productsToShow.filter(p=>{ const s=stockFor(p.id); return s>0 && s<state.lowStockThreshold; });
+  else if(state.stockFilter==='out') productsToShow = productsToShow.filter(p=>stockFor(p.id)<=0);
+
+  if(productsToShow.length===0) html += '<div class="empty">No products match this filter.</div>';
+
+  productsToShow.forEach(p=>{
+    const rows = state.batches.filter(b=>b.productId===p.id).sort((a,b)=>a.receivedAt-b.receivedAt);
+    const stock = stockFor(p.id);
+    html += '<div class="card" style="margin-top:12px;padding:14px 0 0 0;">'+
+      '<div class="semibold sm" style="margin-bottom:10px;padding:0 14px;">'+esc(p.name)+' <span class="xs faint" style="font-weight:400;">— '+stock+' '+p.unit.toLowerCase()+' on hand</span></div>'+
+      '<div style="border-top:1px solid var(--line);">';
+    rows.forEach(b=>{
+      const days = Math.floor((Date.now()-b.receivedAt)/86400000);
+      const bucket = agingBucket(days);
+      const pctLeft = Math.round(b.qtyRemaining/b.qtyReceived*100);
+      html += '<div class="row gap3 xs list-item" style="flex-wrap:wrap;padding:10px 14px;">'+
+        '<span class="mono medium" style="width:118px;">'+esc(b.batchNumber)+'</span>'+
+        '<span class="muted" style="width:96px;">'+esc(b.supplier)+'</span>'+
+        '<span class="muted row gap1" style="width:96px;">'+icon('clock',11)+' '+days+'d ago</span>'+
+        '<span class="badge" style="background:'+bucket.bg+';color:'+bucket.fg+';">'+bucket.label+'</span>'+
+        '<span class="mono" style="margin-left:auto;">'+b.qtyRemaining+'/'+b.qtyReceived+' left</span>'+
+        '<span class="mono" style="width:76px;text-align:right;">@'+fmt(b.unitCost)+'</span>'+
+        '<span class="bar-track" style="width:48px;"><span class="bar-fill" style="display:block;width:'+pctLeft+'%;"></span></span>'+
+      '</div>';
+    });
+    html += '</div></div>';
+  });
+  return html;
+}
+
+function renderPurchases(){
+  const purchases = state.purchases.slice().sort((a,b)=>(b.receivedAt||b.purchaseDate)-(a.receivedAt||a.purchaseDate));
+  const draftCount = purchases.filter(p=>p.status==='DRAFT').length;
+  const receivedValue = purchases.filter(p=>p.status==='RECEIVED').reduce((s,p)=>s+p.quantity*p.unitCost,0);
+  const supplierNames = Array.from(new Set(state.purchases.map(p=>p.supplierName))).sort();
+
+  let html = '<div class="grid grid-stats">';
+  html += statCard('Total purchases', purchases.length, draftCount+' draft'+(draftCount===1?'':'s')+' awaiting receipt');
+  html += statCard('Received value', 'RWF '+fmt(receivedValue), 'At purchase cost');
+  html += statCard('Suppliers', supplierNames.length, supplierNames.slice(0,2).join(', ')+(supplierNames.length>2?'…':''));
+  html += '</div>';
+
+  html += '<div class="card" style="margin-top:12px;"><div class="xs semibold" style="margin-bottom:10px;">New purchase (draft)</div>'+
+    '<div class="row gap2 wrap" style="align-items:flex-end;">'+
+      '<div style="min-width:170px;flex:1;"><div class="xs faint" style="margin-bottom:4px;">Product</div>'+
+        '<select class="input" data-bind="npProductId"><option value="">Select product…</option>'+
+        state.products.map(p=>'<option value="'+p.id+'" '+(state.npProductId===p.id?'selected':'')+'>'+esc(p.name)+'</option>').join('')+
+        '</select></div>'+
+      '<div style="min-width:150px;flex:1;"><div class="xs faint" style="margin-bottom:4px;">Supplier</div>'+
+        '<input class="input" data-bind="npSupplier" list="supplierList" placeholder="Supplier name" value="'+esc(state.npSupplier)+'"/>'+
+        '<datalist id="supplierList">'+supplierNames.map(s=>'<option value="'+esc(s)+'">').join('')+'</datalist></div>'+
+      '<div style="width:90px;"><div class="xs faint" style="margin-bottom:4px;">Quantity</div><input class="input mono" data-bind="npQty" inputmode="numeric" value="'+esc(state.npQty)+'"/></div>'+
+      '<div style="width:110px;"><div class="xs faint" style="margin-bottom:4px;">Unit cost</div><input class="input mono" data-bind="npCost" inputmode="decimal" value="'+esc(state.npCost)+'"/></div>'+
+      '<button class="btn btn-accent" data-action="create-purchase">'+icon('plus',13)+' Create draft</button>'+
+    '</div>'+
+  '</div>';
+
+  html += '<div class="card" style="padding:0;overflow:hidden;margin-top:12px;"><table><thead><tr>'+
+    ['Purchase #','Date','Product','Supplier','Qty','Unit cost','Total','Status',''].map(h=>'<th>'+h+'</th>').join('')+
+    '</tr></thead><tbody>';
+  purchases.forEach(p=>{
+    const product = state.products.find(x=>x.id===p.productId);
+    const isDraft = p.status==='DRAFT';
+    const stripe = isDraft?'var(--warn)':'var(--accent)';
+    html += '<tr>'+
+      '<td class="mono medium" style="box-shadow:inset 3px 0 0 '+stripe+';">'+p.purchaseNumber+'</td>'+
+      '<td class="muted">'+fmtDateOnly(p.purchaseDate)+'</td>'+
+      '<td>'+esc(product?product.name:'—')+'</td>'+
+      '<td class="muted">'+esc(p.supplierName)+'</td>'+
+      '<td class="mono">'+p.quantity+'</td>'+
+      '<td class="mono">'+fmt(p.unitCost)+'</td>'+
+      '<td class="mono">'+fmt(p.quantity*p.unitCost)+'</td>'+
+      '<td><span class="badge" style="background:'+(isDraft?'var(--warn-soft)':'var(--accent-soft)')+';color:'+(isDraft?'var(--warn)':'var(--accent)')+';">'+p.status+'</span></td>'+
+      '<td>'+(isDraft?'<button class="btn" data-action="receive-purchase" data-id="'+p.id+'">'+icon('check',12)+' Receive</button>':'')+'</td>'+
+    '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderCustomers(){
+  const q = state.search.toLowerCase();
+  const list = state.customers.filter(c=>c.name.toLowerCase().includes(q)||c.phone.toLowerCase().includes(q));
+  const statsByName = {};
+  state.sales.forEach(sa=>{
+    const key = sa.customerName;
+    if(!statsByName[key]) statsByName[key] = { orders:0, total:0 };
+    statsByName[key].orders += 1;
+    statsByName[key].total += sa.total;
+  });
+
+  let html = renderSearchBar('Search customers by name or phone…');
+
+  html += '<div class="card" style="margin-top:12px;"><div class="xs semibold" style="margin-bottom:10px;">Add customer</div>'+
+    '<div class="row gap2 wrap" style="align-items:flex-end;">'+
+      '<div style="min-width:180px;flex:1;"><div class="xs faint" style="margin-bottom:4px;">Name</div><input class="input" data-bind="ncName" placeholder="Full name" value="'+esc(state.ncName)+'"/></div>'+
+      '<div style="min-width:160px;flex:1;"><div class="xs faint" style="margin-bottom:4px;">Phone</div><input class="input" data-bind="ncPhone" placeholder="+250 7xx xxx xxx" value="'+esc(state.ncPhone)+'"/></div>'+
+      '<button class="btn btn-accent" data-action="add-customer">'+icon('plus',13)+' Add customer</button>'+
+    '</div>'+
+  '</div>';
+
+  html += '<div class="grid grid-products" style="margin-top:12px;">';
+  list.forEach(c=>{
+    const st = statsByName[c.name] || { orders:0, total:0 };
+    html += '<div class="card">'+
+      '<div class="row gap2" style="align-items:flex-start;">'+
+        '<div class="monogram">'+esc(c.name.charAt(0))+'</div>'+
+        '<div class="grow"><div class="semibold sm">'+esc(c.name)+'</div>'+
+        '<div class="xs muted" style="margin-top:2px;">'+esc(c.phone||'No phone on file')+'</div></div>'+
+      '</div>'+
+      '<div class="dashed" style="margin-top:10px;padding-top:10px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px;text-align:center;">'+
+        '<div><div class="xs faint">Orders (this session)</div><div class="mono sm medium">'+st.orders+'</div></div>'+
+        '<div><div class="xs faint">Spent (this session)</div><div class="mono sm medium">RWF '+fmt(st.total)+'</div></div>'+
+      '</div>'+
+      '<div class="xs faint" style="margin-top:8px;">Customer since '+fmtDateOnly(c.createdAt)+'</div>'+
+    '</div>';
+  });
+  html += '</div>';
+  if(list.length===0) html += '<div class="empty">No customers match "'+esc(state.search)+'".</div>';
+  return html;
+}
+
+function renderExpenses(){
+  const fin = computeFinanceSummary();
+  const total = state.expenses.reduce((s,e)=>s+e.amount,0);
+  const byCategory = {};
+  state.expenses.forEach(e=>{ byCategory[e.category] = (byCategory[e.category]||0)+e.amount; });
+  const maxCat = Math.max(1, ...Object.values(byCategory));
+
+  let html = '<div class="grid grid-stats">';
+  html += statCard('Gross profit', 'RWF '+fmt(fin.grossProfit), fin.margin.toFixed(1)+'% margin');
+  html += statCard('Operating expenses', 'RWF '+fmt(fin.operatingExpenses), state.expenses.length+' recorded');
+  html += statCard('Net profit', 'RWF '+fmt(fin.netProfit), 'Gross profit − expenses', fin.netProfit>=0?'var(--accent)':'var(--danger)');
+  html += '</div>';
+
+  html += '<div class="card" style="margin-top:12px;"><div class="xs semibold" style="margin-bottom:12px;">Expenses by category</div>';
+  Object.entries(byCategory).sort((a,b)=>b[1]-a[1]).forEach(([cat,amt])=>{
+    html += '<div style="margin-bottom:9px;"><div class="row between xs" style="margin-bottom:4px;"><span class="medium">'+esc(cat)+'</span><span class="mono">RWF '+fmt(amt)+'</span></div>'+
+      '<span class="bar-track"><span class="bar-fill" style="display:block;width:'+(amt/maxCat*100)+'%;background:var(--warn);"></span></span></div>';
+  });
+  html += '</div>';
+
+  html += '<div class="card" style="margin-top:12px;"><div class="xs semibold" style="margin-bottom:10px;">Add expense</div>'+
+    '<div class="row gap2 wrap" style="align-items:flex-end;">'+
+      '<div style="min-width:130px;"><div class="xs faint" style="margin-bottom:4px;">Category</div>'+
+        '<select class="input" data-bind="neCategory">'+EXPENSE_CATEGORIES.map(c=>'<option value="'+c+'" '+(state.neCategory===c?'selected':'')+'>'+c+'</option>').join('')+'</select></div>'+
+      '<div style="min-width:200px;flex:1;"><div class="xs faint" style="margin-bottom:4px;">Description</div><input class="input" data-bind="neDescription" placeholder="What was this for?" value="'+esc(state.neDescription)+'"/></div>'+
+      '<div style="width:120px;"><div class="xs faint" style="margin-bottom:4px;">Amount (RWF)</div><input class="input mono" data-bind="neAmount" inputmode="decimal" value="'+esc(state.neAmount)+'"/></div>'+
+      '<button class="btn btn-accent" data-action="add-expense">'+icon('plus',13)+' Add expense</button>'+
+    '</div>'+
+  '</div>';
+
+  html += '<div class="card" style="padding:0;overflow:hidden;margin-top:12px;"><table><thead><tr>'+
+    ['Date','Category','Description','Payment','Amount'].map(h=>'<th>'+h+'</th>').join('')+
+    '</tr></thead><tbody>';
+  state.expenses.slice().sort((a,b)=>b.date-a.date).forEach(e=>{
+    html += '<tr><td class="muted">'+fmtDateOnly(e.date)+'</td><td>'+esc(e.category)+'</td><td>'+esc(e.description)+'</td><td class="muted">'+esc(e.paymentMethod)+'</td><td class="mono">'+fmt(e.amount)+'</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderAnalytics(){
+  const fin = computeFinanceSummary();
+  const stats = computeProductStats();
+  const windowDays = 7;
+  const revGrowth = pctChange(fin.revenue, HISTORY.lastWeekRevenue);
+
+  let html = '<div class="grid grid-stats">';
+  html += statCard('Revenue growth', (revGrowth>=0?'+':'')+revGrowth.toFixed(1)+'%', 'vs. previous week', revGrowth>=0?'var(--accent)':'var(--danger)');
+  html += statCard('Gross margin', fin.margin.toFixed(1)+'%', 'RWF '+fmt(fin.grossProfit)+' gross profit');
+  html += statCard('Net profit', 'RWF '+fmt(fin.netProfit), 'After RWF '+fmt(fin.operatingExpenses)+' expenses', fin.netProfit>=0?'var(--accent)':'var(--danger)');
+  html += '</div>';
+
+  const withVelocity = stats.map(s=>{
+    const velocity = s.units/windowDays;
+    const coverageDays = velocity>0 ? s.stock/velocity : null;
+    const reorderSoon = coverageDays!==null && coverageDays<windowDays;
+    return Object.assign({}, s, { velocity, coverageDays, reorderSoon });
+  }).sort((a,b)=>b.velocity-a.velocity);
+
+  html += '<div class="card" style="margin-top:12px;"><div class="row between" style="margin-bottom:4px;"><span class="xs semibold">Sales velocity &amp; stock coverage</span><span class="xs faint">Based on this week\u2019s units ÷ '+windowDays+' days</span></div>'+
+    '<table style="margin-top:8px;"><thead><tr>'+['Product','Units (7d)','Velocity/day','Stock','Coverage',''].map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>';
+  withVelocity.forEach(s=>{
+    html += '<tr>'+
+      '<td class="row gap2 medium"><span style="width:8px;height:8px;border-radius:50%;background:'+PRODUCT_COLOR[s.product.id]+';display:inline-block;"></span>'+esc(s.product.name)+'</td>'+
+      '<td class="mono">'+s.units+'</td>'+
+      '<td class="mono">'+s.velocity.toFixed(1)+'</td>'+
+      '<td class="mono">'+s.stock+'</td>'+
+      '<td class="mono">'+(s.coverageDays===null?'—':s.coverageDays.toFixed(1)+'d')+'</td>'+
+      '<td>'+(s.reorderSoon?'<span class="badge" style="background:var(--warn-soft);color:var(--warn);">REORDER SOON</span>':'')+'</td>'+
+    '</tr>';
+  });
+  html += '</tbody></table>'+
+    '<div class="xs faint" style="margin-top:8px;">"Reorder soon" flags products with less than '+windowDays+' days of estimated stock coverage at the current sales velocity — an example threshold, reconfigurable in production.</div>'+
+  '</div>';
+
+  const topMovers = withVelocity.slice(0,3);
+  const slowMovers = withVelocity.slice(-3).reverse();
+  html += '<div class="grid grid-2" style="margin-top:12px;">';
+  html += '<div class="card"><div class="xs semibold" style="margin-bottom:10px;">Fastest movers</div>'+
+    topMovers.map(s=>'<div class="row between xs" style="margin-bottom:6px;"><span>'+esc(s.product.name)+'</span><span class="mono muted">'+s.velocity.toFixed(1)+'/day</span></div>').join('')+
+  '</div>';
+  html += '<div class="card"><div class="xs semibold" style="margin-bottom:10px;">Slowest movers</div>'+
+    slowMovers.map(s=>'<div class="row between xs" style="margin-bottom:6px;"><span>'+esc(s.product.name)+'</span><span class="mono muted">'+s.velocity.toFixed(1)+'/day</span></div>').join('')+
+  '</div>';
+  html += '</div>';
+  return html;
+}
+
+function renderDocuments(){
+  const sales = state.sales.slice().sort((a,b)=>b.timestamp-a.timestamp);
+  let html = '<div class="card"><div class="row gap2 xs" style="align-items:flex-start;">'+icon('info',14)+
+    '<div>This demo generates <span class="medium">receipts</span> for completed sales. Invoices, refund documents and exportable reports are additional document types the production system will support.</div>'+
+  '</div></div>';
+
+  if(sales.length===0){
+    html += '<div class="empty" style="padding:40px 0;">No documents yet — complete a sale in POS to generate a receipt.</div>';
+    return html;
+  }
+
+  html += '<div class="card" style="padding:0;overflow:hidden;margin-top:12px;"><table><thead><tr>'+
+    ['Document','Type','Date','Customer','Total',''].map(h=>'<th>'+h+'</th>').join('')+
+    '</tr></thead><tbody>';
+  sales.forEach(s=>{
+    html += '<tr class="saleRow" data-action="view-sale" data-id="'+s.id+'">'+
+      '<td class="mono medium">'+s.saleNumber+'</td>'+
+      '<td class="muted">Receipt</td>'+
+      '<td class="muted">'+fmtDate(s.timestamp)+'</td>'+
+      '<td>'+esc(s.customerName)+'</td>'+
+      '<td class="mono">'+fmt(s.total)+'</td>'+
+      '<td>'+icon('chevron',13)+'</td>'+
+    '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderSettings(){
+  const categories = Array.from(new Set(state.products.map(p=>p.category))).sort();
+  let html = '<div class="grid grid-2">';
+  html += '<div class="card"><div class="xs semibold" style="margin-bottom:12px;">Business profile</div>'+
+    '<div class="xs faint" style="margin-bottom:4px;">Business name</div>'+
+    '<input class="input" data-bind="businessName" value="'+esc(state.businessName)+'" style="margin-bottom:10px;"/>'+
+    '<div class="row between xs" style="margin-bottom:6px;"><span class="muted">Currency</span><span class="mono">RWF</span></div>'+
+    '<div class="row between xs"><span class="muted">Timezone</span><span class="mono">Africa/Kigali</span></div>'+
+    '<div class="xs faint" style="margin-top:8px;">Currency and timezone are fixed for this demo — configurable per business in production.</div>'+
+  '</div>';
+  html += '<div class="card"><div class="xs semibold" style="margin-bottom:12px;">Inventory settings</div>'+
+    '<div class="xs faint" style="margin-bottom:4px;">Low-stock threshold (units)</div>'+
+    '<input class="input mono" data-bind="lowStockThreshold" inputmode="numeric" value="'+state.lowStockThreshold+'" style="width:100px;"/>'+
+    '<div class="xs faint" style="margin-top:8px;">Used by Dashboard, Products and Inventory to flag items needing attention — change it and check those screens.</div>'+
+  '</div>';
+  html += '</div>';
+
+  html += '<div class="grid grid-2" style="margin-top:12px;">';
+  html += '<div class="card"><div class="xs semibold" style="margin-bottom:10px;">Categories in use</div>'+
+    '<div class="row wrap gap2">'+categories.map(c=>'<span class="badge" style="background:var(--bg);color:var(--ink-muted);border:1px solid var(--border);">'+esc(c)+'</span>').join('')+'</div>'+
+  '</div>';
+  html += '<div class="card"><div class="xs semibold" style="margin-bottom:10px;">Payment methods</div>'+
+    '<div class="row wrap gap2">'+['Cash','Mobile Money','Bank','Card'].map(m=>'<span class="badge" style="background:var(--bg);color:var(--ink-muted);border:1px solid var(--border);">'+m+'</span>').join('')+'</div>'+
+  '</div>';
+  html += '</div>';
+
+  html += '<div class="card" style="margin-top:12px;border-color:var(--danger);"><div class="xs semibold danger" style="margin-bottom:6px;">Danger zone</div>'+
+    '<div class="xs muted" style="margin-bottom:10px;">Resets products, batches, purchases, customers, expenses and sales back to the opening demo state.</div>'+
+    '<button class="btn" data-action="reset-demo" style="color:var(--danger);border-color:var(--danger);">'+icon('rotate',13)+' Reset demo data</button>'+
+  '</div>';
+  return html;
+}
+
+function renderPOS(){
+  const q = state.search.toLowerCase();
+  const list = state.products.filter(p=>p.name.toLowerCase().includes(q)||p.sku.toLowerCase().includes(q));
+  const cartLines = computeCartLines();
+  const subtotal = cartLines.reduce((s,l)=>s+l.lineTotal,0);
+  const total = subtotal;
+  const cashNum = parseFloat(state.cashReceived)||0;
+  const change = state.paymentMethod==='Cash' ? cashNum-total : 0;
+  const cartHasErrors = cartLines.some(l=>l.priceError||l.stockError);
+
+  let left = renderSearchBar('Scan or search a product…');
+  left += '<div class="pos-products" style="margin-top:12px;">';
+  list.forEach(p=>{
+    const stock = stockFor(p.id);
+    const out = stock<=0;
+    const cartQty = (state.cart.find(i=>i.productId===p.id)||{}).qty || 0;
+    const control = cartQty>0
+      ? '<div class="qtybox"><button data-action="cart-adjust" data-id="'+p.id+'" data-delta="-1">'+icon('minus',11)+'</button><span class="mono xs" style="width:20px;text-align:center;">'+cartQty+'</span><button data-action="cart-adjust" data-id="'+p.id+'" data-delta="1" '+(cartQty>=stock?'disabled style="opacity:.4;"':'')+'>'+icon('plus',11)+'</button></div>'
+      : '<button class="addbtn" data-action="cart-adjust" data-id="'+p.id+'" data-delta="1" '+(out?'disabled style="opacity:.4;"':'')+'>'+icon('plus',13)+'</button>';
+    left += '<div class="card" style="padding:10px;'+(out?'opacity:.55;':'')+'">'+
+      '<div class="row gap2" style="align-items:center;">'+
+        '<div class="monogram">'+esc(p.name.charAt(0))+'</div>'+
+        '<div class="grow"><div class="medium sm">'+esc(p.name)+'</div>'+
+        '<div class="xs muted">'+esc(p.unit)+' · '+(out?'Out of stock':(stock+' available'))+'</div></div>'+
+      '</div>'+
+      '<div class="row between" style="margin-top:10px;">'+
+        '<span class="mono semibold accent sm">RWF '+fmt(p.rec)+'</span>'+control+
+      '</div>'+
+    '</div>';
+  });
+  left += '</div>';
+
+  let right = '<div class="card">';
+  right += '<div class="row gap2 xs semibold" style="margin-bottom:10px;">'+icon('cart',14)+' Current sale</div>';
+  if(cartLines.length===0){
+    right += '<div class="empty">Cart is empty. Add a product from the left.</div>';
+  } else {
+    cartLines.forEach(l=>{
+      right += '<div class="cart-item">'+
+        '<div class="row between"><span class="xs medium">'+esc(l.product.name)+' <span class="faint">×'+l.qty+'</span></span>'+
+        '<button data-action="remove-cart" data-id="'+l.productId+'" style="border:none;background:none;color:var(--ink-faint);cursor:pointer;">'+icon('trash',13)+'</button></div>'+
+        '<div class="row gap2" style="margin-top:8px;">'+
+          '<input class="input mono" data-bind="cartPrice" data-id="'+l.productId+'" inputmode="decimal" value="'+l.unitPrice+'" style="width:96px;'+(l.priceError?'border-color:var(--danger);':'')+'"/>'+
+          '<span class="mono xs semibold" style="margin-left:auto;">RWF '+fmt(l.lineTotal)+'</span>'+
+        '</div>'+
+        (l.priceError||l.stockError ? '<div class="xs danger row gap1" style="margin-top:6px;">'+icon('alert',11)+' '+(l.priceError||l.stockError)+'</div>' : '')+
+      '</div>';
+    });
+  }
+
+  right += '<div class="dashed" style="margin-top:6px;padding-top:10px;">'+
+    '<div class="row between xs muted"><span>Subtotal</span><span class="mono">RWF '+fmt(subtotal)+'</span></div>'+
+    '<div class="row between xs faint" style="margin-top:2px;"><span>Tax</span><span>Not configured</span></div>'+
+    '<div class="row between sm semibold" style="margin-top:4px;"><span>Total</span><span class="mono">RWF '+fmt(total)+'</span></div>'+
+  '</div>';
+
+  right += '<div style="margin-top:10px;">'+
+    '<input class="input" data-bind="customerName" list="posCustomerList" placeholder="Customer (or Walk-in Customer)" value="'+esc(state.customerName)+'"/>'+
+    '<datalist id="posCustomerList">'+state.customers.map(c=>'<option value="'+esc(c.name)+'">').join('')+'</datalist>'+
+    '<div class="payment-grid">';
+  ['Cash','Mobile Money','Bank','Card'].forEach(m=>{
+    right += '<button class="paymethod '+(state.paymentMethod===m?'active':'')+'" data-action="set-payment" data-method="'+m+'">'+m+'</button>';
+  });
+  right += '</div>';
+  if(state.paymentMethod==='Cash'){
+    right += '<input class="input mono" data-bind="cashReceived" inputmode="decimal" placeholder="Cash received" value="'+esc(state.cashReceived)+'"/>';
+    if(state.cashReceived!==''){
+      right += '<div class="xs medium" style="margin-top:4px;color:'+(change<0?'var(--danger)':'var(--accent)')+';">'+(change<0?('Short by RWF '+fmt(-change)):('Change: RWF '+fmt(change)))+'</div>';
+    }
+  } else {
+    right += '<div class="xs faint">Simulated in this demo — connects to a real PaymentProvider adapter in production.</div>';
+  }
+  right += '</div>';
+
+  right += '<button class="btn btn-block" data-action="complete-sale" '+(cartLines.length===0?'disabled':'')+' style="margin-top:12px;'+(cartHasErrors?'background:var(--danger-soft);color:var(--danger);':'background:var(--accent);color:#fff;')+'">'+
+    (cartHasErrors?'Fix errors to continue':'Complete sale')+
+  '</button>';
+  right += '</div>';
+
+  return '<div class="pos-layout"><div>'+left+'</div><div>'+right+'</div></div>';
+}
+
+function renderSales(){
+  if(state.sales.length===0) return '<div class="empty" style="padding:56px 0;">No sales yet. Completed sales will appear here with full receipt detail.</div>';
+  const liveRevenue = state.sales.reduce((s,sa)=>s+sa.total,0);
+  const itemsSold = state.sales.reduce((s,sa)=>s+sa.items.reduce((x,i)=>x+i.qty,0),0);
+  const avgTxn = liveRevenue/state.sales.length;
+
+  let html = '<div class="grid grid-stats" style="margin-bottom:12px;">';
+  html += statCard('Session earnings', 'RWF '+fmt(liveRevenue), state.sales.length+' transaction'+(state.sales.length===1?'':'s'));
+  html += statCard('Average transaction', 'RWF '+fmt(avgTxn));
+  html += statCard('Items sold', fmt(itemsSold), 'This session');
+  html += '</div>';
+
+  html += '<div class="card" style="padding:0;overflow:hidden;"><table><thead><tr>'+
+    ['Sale #','Date','Customer','Items','Total','Profit',''].map(h=>'<th>'+h+'</th>').join('')+
+    '</tr></thead><tbody>';
+  state.sales.forEach(s=>{
+    html += '<tr class="saleRow" data-action="view-sale" data-id="'+s.id+'">'+
+      '<td class="mono medium">'+s.saleNumber+'</td>'+
+      '<td class="muted">'+fmtDate(s.timestamp)+'</td>'+
+      '<td>'+esc(s.customerName)+'</td>'+
+      '<td class="muted">'+s.items.length+' line'+(s.items.length===1?'':'s')+'</td>'+
+      '<td class="mono">'+fmt(s.total)+'</td>'+
+      '<td class="mono accent">'+fmt(s.profit)+'</td>'+
+      '<td>'+icon('chevron',13)+'</td>'+
+    '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderReceiptModal(){
+  const r = state.receipt;
+  if(!r || !state.viewingReceipt) return '';
+  let items = '';
+  r.items.forEach(it=>{
+    items += '<div class="xs" style="margin-bottom:8px;">'+
+      '<div class="row between medium"><span>'+esc(it.product.name)+'</span><span class="mono">'+fmt(it.lineTotal)+'</span></div>'+
+      '<div class="mono faint">'+it.qty+' × '+fmt(it.unitPrice)+'</div>'+
+    '</div>';
+  });
+  let cashLines = '';
+  if(r.paymentMethod==='Cash'){
+    cashLines = '<div class="row between muted"><span>Cash received</span><span>RWF '+fmt(r.cashReceived)+'</span></div>'+
+      '<div class="row between accent"><span>Change</span><span>RWF '+fmt(r.change)+'</span></div>';
+  }
+  return '<div class="modal-overlay">'+
+    '<div class="receipt">'+
+      '<div class="scallop-top"></div>'+
+      '<div class="receipt-body">'+
+        '<div style="text-align:center;padding:12px 0;">'+
+          '<div class="bold sm" style="letter-spacing:.03em;">'+esc(r.businessName||state.businessName)+'</div>'+
+          '<div class="xs faint" style="margin-top:2px;">Business address — configure in Settings</div>'+
+        '</div>'+
+        '<div class="dashed"></div>'+
+        '<div class="mono xs" style="padding:10px 0;">'+
+          '<div class="row between"><span>Receipt</span><span>'+r.saleNumber+'</span></div>'+
+          '<div class="row between"><span>Date</span><span>'+fmtDate(r.timestamp)+'</span></div>'+
+          '<div class="row between"><span>Customer</span><span>'+esc(r.customerName)+'</span></div>'+
+        '</div>'+
+        '<div class="dashed"></div>'+
+        '<div style="padding:10px 0;">'+items+'</div>'+
+        '<div class="dashed"></div>'+
+        '<div class="mono xs" style="padding:10px 0;">'+
+          '<div class="row between"><span>Subtotal</span><span>RWF '+fmt(r.subtotal)+'</span></div>'+
+          '<div class="row between sm bold" style="margin-top:2px;"><span>Total</span><span>RWF '+fmt(r.total)+'</span></div>'+
+          '<div class="row between muted" style="margin-top:4px;"><span>Payment</span><span>'+r.paymentMethod+'</span></div>'+
+          cashLines+
+        '</div>'+
+        '<div class="dashed"></div>'+
+        '<div class="xs faint" style="text-align:center;padding:10px 0;">Demo receipt — connects to WhatsApp / print adapters in production.</div>'+
+      '</div>'+
+      '<div class="scallop-bottom"></div>'+
+      '<div class="row gap2" style="margin-top:12px;">'+
+        '<button class="btn grow" disabled title="Connect a printer adapter in production" style="opacity:.6;cursor:not-allowed;justify-content:center;">'+icon('printer',13)+' Print</button>'+
+        '<button class="btn grow" disabled title="Connect a WhatsApp provider in production" style="opacity:.6;cursor:not-allowed;justify-content:center;">'+icon('message',13)+' WhatsApp</button>'+
+        '<button class="btn" data-action="close-receipt">Close</button>'+
+      '</div>'+
+      '<button class="btn btn-accent btn-block" data-action="new-sale" style="margin-top:8px;">New sale</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function render(){
+  const app = document.getElementById('app');
+
+  let focusInfo = null;
+  const active = document.activeElement;
+  if(active && app.contains(active) && active.tagName==='INPUT'){
+    focusInfo = { bind:active.getAttribute('data-bind'), id:active.getAttribute('data-id'), start:active.selectionStart, end:active.selectionEnd };
+  }
+
+  let html = '<div class="shell">';
+
+  // Sidebar ------------------------------------------------------------
+  html += '<aside class="sidebar '+(state.sidebarCollapsed?'collapsed':'')+'">';
+  html += '<div class="sidebar-brand"><div class="brandmark">'+initials(state.businessName)+'</div><div class="brand-text">'+esc(state.businessName)+'<span>Business &amp; POS</span></div></div>';
+  html += '<button class="sidebar-toggle" data-action="toggle-sidebar" title="'+(state.sidebarCollapsed?'Expand':'Collapse')+' sidebar">'+icon('panel',15)+'</button>';
+  html += '<nav class="sidebar-nav">';
+  let lastGroup = null;
+  TABS.forEach(t=>{
+    if(t.group!==lastGroup){
+      html += '<div class="side-group-label">'+esc(t.group)+'</div>';
+      lastGroup = t.group;
+    }
+    html += '<button class="side-item '+(state.tab===t.id?'active':'')+'" data-action="set-tab" data-tab="'+t.id+'" title="'+esc(t.label)+'">'+icon(t.icon,16)+'<span class="label">'+esc(t.label)+'</span></button>';
+  });
+  html += '</nav>';
+  html += '<div class="sidebar-footer">';
+  html += '<button class="side-item '+(state.tab===SETTINGS_TAB.id?'active':'')+'" data-action="set-tab" data-tab="'+SETTINGS_TAB.id+'" title="Settings">'+icon(SETTINGS_TAB.icon,16)+'<span class="label">Settings</span></button>';
+  html += '</div>';
+  html += '</aside>';
+
+  // Main column ----------------------------------------------------------
+  html += '<div class="main-col">';
+
+  html += '<header class="topbar">';
+  html += '<div class="topbar-brand-mobile">'+esc(state.businessName)+'</div>';
+  html += '<div class="topbar-search">'+icon('search',14)+'<input data-bind="globalSearch" placeholder="Search products, customers, sales\u2026" value="'+esc(state.globalSearch)+'"/></div>';
+  html += '<button class="topbar-icon-btn scan-btn" data-action="set-tab" data-tab="pos" title="Scan">'+icon('scan',15)+'</button>';
+  html += '<button class="topbar-newsale" data-action="set-tab" data-tab="pos">'+icon('plus',13)+' New Sale</button>';
+  html += '<div class="topbar-context">';
+  html += '<button class="topbar-icon-btn" data-action="reset-demo" title="Reset demo data">'+icon('rotate',15)+'</button>';
+  html += '<button class="topbar-icon-btn" data-action="show-notifications" title="Notifications">'+icon('bell',15)+'</button>';
+  html += '<div class="topbar-business">'+esc(state.businessName)+'</div>';
+  html += '<div class="topbar-avatar" title="Demo Owner">DO</div>';
+  html += '</div>';
+  html += '</header>';
+
+  if(state.showBanner){
+    html += '<div class="banner">'+icon('info',14)+
+      '<div>Demo data only — <span class="mono">XR, Wireless Mouse, iPhone 14, Samsung Galaxy A25, Kigali Tech Distributors Ltd, Mobile World Imports</span> are placeholder values (spec Rule 1 / Rule 141) for an electronics/phones/accessories demo — not real client data or market prices. Products, prices, thresholds and categories are all reconfigurable.</div>'+
+      '<button data-action="close-banner" style="border:none;background:none;color:var(--warn);margin-left:auto;cursor:pointer;">'+icon('x',14)+'</button>'+
+    '</div>';
+  }
+
+  html += '<div class="content">';
+  if(state.tab==='dashboard') html += renderDashboard();
+  else if(state.tab==='products') html += renderProducts();
+  else if(state.tab==='inventory') html += renderInventory();
+  else if(state.tab==='pos') html += renderPOS();
+  else if(state.tab==='sales') html += renderSales();
+  else if(state.tab==='purchases') html += renderPurchases();
+  else if(state.tab==='customers') html += renderCustomers();
+  else if(state.tab==='expenses') html += renderExpenses();
+  else if(state.tab==='analytics') html += renderAnalytics();
+  else if(state.tab==='documents') html += renderDocuments();
+  else if(state.tab==='settings') html += renderSettings();
+  else html += renderPlaceholder(ALL_TABS.find(t=>t.id===state.tab) || { label:'Section', icon:'info' });
+  html += '</div>';
+
+  html += '</div>'; // .main-col
+  html += '</div>'; // .shell
+
+  // Mobile bottom navigation + "More" sheet -------------------------------
+  html += '<nav class="mobile-bottom-nav">';
+  MOBILE_PRIMARY.forEach(t=>{
+    html += '<button class="'+(state.tab===t.id?'active':'')+'" data-action="set-tab" data-tab="'+t.id+'">'+icon(t.icon,18)+'<span>'+t.label+'</span></button>';
+  });
+  html += '<button class="'+(state.mobileMoreOpen?'active':'')+'" data-action="toggle-more">'+icon('morehoriz',18)+'<span>More</span></button>';
+  html += '</nav>';
+
+  if(state.mobileMoreOpen){
+    html += '<div class="mobile-more-sheet open" data-action="close-more">';
+    html += '<div class="mobile-more-panel"><div class="mobile-more-handle"></div>';
+    MOBILE_MORE_TABS.forEach(t=>{
+      html += '<button class="side-item '+(state.tab===t.id?'active':'')+'" data-action="set-tab" data-tab="'+t.id+'">'+icon(t.icon,16)+'<span class="label">'+esc(t.label)+'</span></button>';
+    });
+    html += '</div></div>';
+  }
+
+  if(state.toast){
+    html += '<div class="toast" style="background:'+(state.toast.type==='error'?'var(--danger)':'var(--accent)')+';">'+
+      icon(state.toast.type==='error'?'alert':'check',14)+' '+esc(state.toast.message)+
+    '</div>';
+  }
+
+  html += renderReceiptModal();
+
+  app.innerHTML = html;
+
+  if(focusInfo && focusInfo.bind){
+    const sel = focusInfo.id!=null ? '[data-bind="'+focusInfo.bind+'"][data-id="'+focusInfo.id+'"]' : '[data-bind="'+focusInfo.bind+'"]';
+    const el = app.querySelector(sel);
+    if(el){
+      el.focus();
+      try{ el.setSelectionRange(focusInfo.start, focusInfo.end); }catch(e){}
+    }
+  }
+}
+
+// ---------------------------------------------------------------------
+// Event delegation
+// ---------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', function(){
+  const app = document.getElementById('app');
+
+  app.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-action]');
+    if(!btn) return;
+    const action = btn.getAttribute('data-action');
+    const id = btn.getAttribute('data-id');
+    if(action==='set-tab') { state.tab = btn.getAttribute('data-tab'); state.mobileMoreOpen=false; render(); }
+    else if(action==='toggle-sidebar') { state.sidebarCollapsed = !state.sidebarCollapsed; render(); }
+    else if(action==='toggle-more') { state.mobileMoreOpen = !state.mobileMoreOpen; render(); }
+    else if(action==='close-more') { state.mobileMoreOpen = false; render(); }
+    else if(action==='show-notifications') { showToast('success','No new notifications yet.'); }
+    else if(action==='cart-adjust') adjustCart(id, parseInt(btn.getAttribute('data-delta'),10));
+    else if(action==='remove-cart') removeFromCart(id);
+    else if(action==='set-payment') { state.paymentMethod = btn.getAttribute('data-method'); render(); }
+    else if(action==='set-stock-filter') { state.stockFilter = btn.getAttribute('data-filter'); render(); }
+    else if(action==='toggle-add-product') { state.showAddProduct = !state.showAddProduct; render(); }
+    else if(action==='create-product') createProduct();
+    else if(action==='complete-sale') completeSale();
+    else if(action==='reset-demo') resetDemo();
+    else if(action==='close-banner') { state.showBanner=false; render(); }
+    else if(action==='close-receipt') { state.viewingReceipt=false; render(); }
+    else if(action==='new-sale') { state.viewingReceipt=false; state.tab='pos'; render(); }
+    else if(action==='view-sale') { state.receipt = state.sales.find(s=>s.id===id); state.viewingReceipt=true; render(); }
+    else if(action==='create-purchase') createPurchase();
+    else if(action==='receive-purchase') receivePurchase(id);
+    else if(action==='add-customer') addCustomer();
+    else if(action==='add-expense') addExpense();
+  });
+
+  app.addEventListener('input', function(e){
+    const el = e.target;
+    const bind = el.getAttribute && el.getAttribute('data-bind');
+    if(!bind) return;
+    if(bind==='search') state.search = el.value;
+    else if(bind==='globalSearch') state.globalSearch = el.value;
+    else if(bind==='customerName') state.customerName = el.value;
+    else if(bind==='cashReceived') state.cashReceived = el.value;
+    else if(bind==='cartPrice') { setCartPrice(el.getAttribute('data-id'), el.value); return; }
+    else if(bind==='npProductId') state.npProductId = el.value;
+    else if(bind==='npSupplier') state.npSupplier = el.value;
+    else if(bind==='npQty') state.npQty = el.value;
+    else if(bind==='npCost') state.npCost = el.value;
+    else if(bind==='ncName') state.ncName = el.value;
+    else if(bind==='ncPhone') state.ncPhone = el.value;
+    else if(bind==='neCategory') state.neCategory = el.value;
+    else if(bind==='neDescription') state.neDescription = el.value;
+    else if(bind==='neAmount') state.neAmount = el.value;
+    else if(bind==='pfName') state.pfName = el.value;
+    else if(bind==='pfCategory') state.pfCategory = el.value;
+    else if(bind==='pfUnit') state.pfUnit = el.value;
+    else if(bind==='pfMin') state.pfMin = el.value;
+    else if(bind==='pfRec') state.pfRec = el.value;
+    else if(bind==='pfMax') state.pfMax = el.value;
+    else if(bind==='businessName') state.businessName = el.value;
+    else if(bind==='lowStockThreshold') state.lowStockThreshold = parseInt(el.value,10)||0;
+    render();
+  });
+
+  app.addEventListener('keydown', function(e){
+    const el = e.target;
+    if(e.key==='Enter' && el.getAttribute && el.getAttribute('data-bind')==='globalSearch'){
+      state.search = state.globalSearch;
+      state.tab = 'products';
+      state.mobileMoreOpen = false;
+      render();
+    }
+  });
+
+  render();
+});
+})();
+</script>
+</body>
+</html>
