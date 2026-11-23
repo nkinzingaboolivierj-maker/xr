@@ -8,7 +8,7 @@ const TOKEN_KEY = 'xr.session';
 // The web UI is hosted on Vercel while the API runs on Railway.
 // config.js sets XR_API_BASE. Local/same-origin development leaves it empty.
 const API_BASE = typeof globalThis.XR_API_BASE === 'string'
-  ? globalThis.XR_API_BASE.replace(/\\/+$/, '')
+  ? globalThis.XR_API_BASE.replace(/\/+$/, '')
   : '';
 function apiUrl(path) {
   return API_BASE ? new URL(path, `${API_BASE}/`).toString() : path;
