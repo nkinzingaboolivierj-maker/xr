@@ -1,5 +1,9 @@
-# XR has zero npm dependencies, so the image is just Node + the source.
+# XR: Node.js 22 + bundled API/web app, no npm dependencies.
 FROM node:22-alpine
+
+RUN apk add --no-cache su-exec \
+ && addgroup -S xr \
+ && adduser -S xr -G xr
 
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
@@ -14,11 +18,11 @@ COPY src ./src
 COPY public ./public
 COPY scripts ./scripts
 
-# Non-root user; /data is the ONLY writable path and must be a persistent volume.
-RUN addgroup -S xr && adduser -S xr -G xr && mkdir -p /data && chown -R xr:xr /data
-USER xr
-VOLUME ["/data"]
-EXPOSE 3000
+# Build-time ownership is useful locally; Railway's mounted volume is
+# re-owned by the entrypoint at container start before dropping privileges.
+RUN mkdir -p /data/backups \
+ && chown -R xr:xr /data
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD ["node", "scripts/healthcheck.js"]
+EXPOSE 3000
+ENTRYPOINT ["sh", "./scripts/railway-entrypoint.sh"]
 CMD ["node", "src/server.js"]
