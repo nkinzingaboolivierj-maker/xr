@@ -5,6 +5,15 @@
 
 const TOKEN_KEY = 'xr.session';
 
+// The web UI is hosted on Vercel while the API runs on Railway.
+// config.js sets XR_API_BASE. Local/same-origin development leaves it empty.
+const API_BASE = typeof globalThis.XR_API_BASE === 'string'
+  ? globalThis.XR_API_BASE.replace(/\\/+$/, '')
+  : '';
+function apiUrl(path) {
+  return API_BASE ? new URL(path, `${API_BASE}/`).toString() : path;
+}
+
 export class ApiError extends Error {
   constructor({ status = 0, code = 'UNKNOWN', detail = '', requestId = null, extra = null }) {
     super(detail || code);
@@ -38,7 +47,7 @@ export async function request(method, path, { body, query, signal, auth: needsAu
   if (needsAuth && token) headers.Authorization = `Bearer ${token}`;
   let res;
   try {
-    res = await fetch(path + toQuery(query), { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined, signal });
+    res = await fetch(apiUrl(path) + toQuery(query), { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined, signal });
   } catch (err) {
     if (err && err.name === 'AbortError') throw err;
     throw new ApiError({ code: 'NETWORK', detail: 'Cannot reach the server. Check your connection and try again.' });
@@ -66,7 +75,7 @@ export const patch = async (path, body, opts) => (await request('PATCH', path, {
 // Fetches a binary document (PDF) with the bearer token and returns an object URL.
 export async function fetchBlobUrl(path) {
   let res;
-  try { res = await fetch(path, { headers: { Authorization: `Bearer ${currentToken()}` } }); }
+  try { res = await fetch(apiUrl(path), { headers: { Authorization: `Bearer ${currentToken()}` } }); }
   catch { throw new ApiError({ code: 'NETWORK', detail: 'Cannot reach the server.' }); }
   if (!res.ok) throw new ApiError({ status: res.status, code: `HTTP_${res.status}`, detail: 'Could not load the document.' });
   return URL.createObjectURL(await res.blob());
